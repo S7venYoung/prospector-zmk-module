@@ -1,2 +1,28 @@
 config SHIELD_PROSPECTOR_ADAPTER
     def_bool $(shields_list_contains,prospector_adapter)
+
+if SHIELD_PROSPECTOR_ADAPTER
+
+config PROSPECTOR_TOUCH_ENABLED
+    bool "Enable CST816S touch gestures"
+    default n
+    select I2C
+    select INPUT
+    select INPUT_CST816S
+    help
+      Enables the Waveshare 1.69 inch touch controller. The touch panel must
+      be wired to D4/D5 (I2C), D0 (IRQ), and D1 (reset).
+
+config PROSPECTOR_SETTINGS
+    bool "Persist Prospector display settings"
+    default y
+    select SETTINGS
+    select SETTINGS_NVS
+    help
+      Stores display preferences in the receiver flash using Zephyr settings.
+
+config PROSPECTOR_SCREEN_ALWAYS_ON
+    bool "Keep the display backlight on"
+    default y
+
+endif
