@@ -8,7 +8,6 @@ config PROSPECTOR_TOUCH_ENABLED
     default n
     select I2C
     select INPUT
-    select INPUT_CST816S
     help
       Enables the Waveshare 1.69 inch touch controller. The touch panel must
       be wired to D4/D5 (I2C), D0 (IRQ), and D1 (reset).
@@ -17,7 +16,6 @@ config PROSPECTOR_SETTINGS
     bool "Persist Prospector display settings"
     default y
     select SETTINGS
-    select SETTINGS_NVS
     help
       Stores display preferences in the receiver flash using Zephyr settings.
 
