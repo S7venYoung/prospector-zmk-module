@@ -2,6 +2,7 @@
 #include <zephyr/input/input.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
 #include <lvgl.h>
 #include "prospector_touch.h"
 

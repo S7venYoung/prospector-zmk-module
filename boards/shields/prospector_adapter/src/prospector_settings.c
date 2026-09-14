@@ -1,5 +1,6 @@
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/util.h>
+#include <errno.h>
 #include "prospector_touch.h"
 
 extern void prospector_set_brightness(uint8_t level);
