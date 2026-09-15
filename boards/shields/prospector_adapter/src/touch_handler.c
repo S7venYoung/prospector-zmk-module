@@ -61,7 +61,18 @@ static void touch_input(struct input_event *evt, void *user_data) {
         int16_t dx = (int16_t)y - start_y, dy = start_x - (int16_t)x;
         int16_t ax = dx < 0 ? -dx : dx, ay = dy < 0 ? -dy : dy;
         enum prospector_swipe_direction direction;
-        if (MAX(ax, ay) >= SWIPE_DISTANCE) { direction = ay > ax ? (dy > 0 ? PROSPECTOR_SWIPE_DOWN : PROSPECTOR_SWIPE_UP) : (dx > 0 ? PROSPECTOR_SWIPE_RIGHT : PROSPECTOR_SWIPE_LEFT); handle_gesture(direction); last_gesture = k_uptime_get(); }
+        if (MAX(ax, ay) >= SWIPE_DISTANCE) {
+            direction = ay > ax ? (dy > 0 ? PROSPECTOR_SWIPE_DOWN : PROSPECTOR_SWIPE_UP) : (dx > 0 ? PROSPECTOR_SWIPE_RIGHT : PROSPECTOR_SWIPE_LEFT);
+            handle_gesture(direction);
+            last_gesture = k_uptime_get();
+        } else if (prospector_touch_settings_visible()) {
+            /* The CST816S firmware on some receivers misses rightward motion
+             * reports. In the settings overlay, the two screen halves are
+             * therefore also direct brightness controls. Touch Y maps to the
+             * rotated display X coordinate. */
+            handle_gesture(y >= 140 ? PROSPECTOR_SWIPE_RIGHT : PROSPECTOR_SWIPE_LEFT);
+            last_gesture = k_uptime_get();
+        }
     }
     touched = now;
 }
@@ -81,7 +92,7 @@ void prospector_touch_attach(lv_obj_t *screen) {
     lv_obj_set_style_text_color(label, lv_color_hex(0xF3EEE5), 0);
     lv_obj_t *value = lv_label_create(settings_panel); lv_obj_set_pos(value, 150, 56);
     lv_obj_set_style_text_color(value, lv_color_hex(0xFFBF18), 0);
-    lv_obj_t *hint = lv_label_create(settings_panel); lv_label_set_text(hint, "LEFT / RIGHT  ADJUST\nUP  SAVE & CLOSE"); lv_obj_set_pos(hint, 16, 112);
+    lv_obj_t *hint = lv_label_create(settings_panel); lv_label_set_text(hint, "SWIPE OR TAP LEFT / RIGHT\nUP  SAVE & CLOSE"); lv_obj_set_pos(hint, 16, 112);
     lv_obj_set_style_text_color(hint, lv_color_hex(0xA8A8A4), 0);
     lv_obj_add_flag(settings_panel, LV_OBJ_FLAG_HIDDEN); settings_refresh();
 }
