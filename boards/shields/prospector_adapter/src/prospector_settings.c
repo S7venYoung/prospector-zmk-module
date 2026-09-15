@@ -1,4 +1,5 @@
 #include <zephyr/settings/settings.h>
+#include <zephyr/init.h>
 #include <zephyr/sys/util.h>
 #include <errno.h>
 #include "prospector_touch.h"
