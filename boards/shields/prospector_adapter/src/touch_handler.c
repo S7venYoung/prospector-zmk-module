@@ -37,6 +37,21 @@ static void handle_gesture(enum prospector_swipe_direction direction) {
 }
 static void touch_input(struct input_event *evt, void *user_data) {
     ARG_UNUSED(user_data);
+    /* CST816S reports recognised swipes as key events on some firmware
+     * revisions. Prefer those events when present; the coordinate path below
+     * remains the fallback for raw touch reports. */
+    if (evt->value && k_uptime_get() - last_gesture > SWIPE_COOLDOWN_MS) {
+        enum prospector_swipe_direction direction;
+        bool hardware_gesture = true;
+        switch (evt->code) {
+        case INPUT_KEY_LEFT: direction = PROSPECTOR_SWIPE_LEFT; break;
+        case INPUT_KEY_RIGHT: direction = PROSPECTOR_SWIPE_RIGHT; break;
+        case INPUT_KEY_UP: direction = PROSPECTOR_SWIPE_UP; break;
+        case INPUT_KEY_DOWN: direction = PROSPECTOR_SWIPE_DOWN; break;
+        default: hardware_gesture = false; break;
+        }
+        if (hardware_gesture) { handle_gesture(direction); last_gesture = k_uptime_get(); return; }
+    }
     if (evt->code == INPUT_ABS_X) { x = evt->value; return; }
     if (evt->code == INPUT_ABS_Y) { y = evt->value; return; }
     if (evt->code != INPUT_BTN_TOUCH) return;
