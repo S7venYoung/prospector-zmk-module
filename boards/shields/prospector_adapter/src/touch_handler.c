@@ -44,7 +44,7 @@ static void touch_input(struct input_event *evt, void *user_data) {
     if (now && !touched) { start_x = x; start_y = y; }
     if (!now && touched && k_uptime_get() - last_gesture > SWIPE_COOLDOWN_MS) {
         int16_t dx = (int16_t)y - start_y, dy = start_x - (int16_t)x;
-        int16_t ax = ABS(dx), ay = ABS(dy);
+        int16_t ax = dx < 0 ? -dx : dx, ay = dy < 0 ? -dy : dy;
         enum prospector_swipe_direction direction;
         if (MAX(ax, ay) >= SWIPE_DISTANCE) { direction = ay > ax ? (dy > 0 ? PROSPECTOR_SWIPE_DOWN : PROSPECTOR_SWIPE_UP) : (dx > 0 ? PROSPECTOR_SWIPE_RIGHT : PROSPECTOR_SWIPE_LEFT); handle_gesture(direction); last_gesture = k_uptime_get(); }
     }
