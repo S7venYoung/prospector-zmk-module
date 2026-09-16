@@ -28,7 +28,7 @@ static void scanner_idle_scan_tick(lv_timer_t *timer) {
     scan_tick++;
     for (int i = 0; i < 3; i++) {
         lv_obj_set_style_bg_opa(target_pips[i],
-                                i == (scan_tick / 5) % 3 ? LV_OPA_COVER : LV_OPA_55, 0);
+                                i == (scan_tick / 5) % 3 ? LV_OPA_COVER : LV_OPA_50, 0);
     }
 }
 
