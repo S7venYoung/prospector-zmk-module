@@ -37,6 +37,8 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
     # Shared scanner data bridge for all theme renderers
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_theme.c)
     target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX app PRIVATE src/scanner_codex_theme.c)
+    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE app PRIVATE src/scanner_walle_theme.c)
+    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER app PRIVATE src/scanner_weather_theme.c)
 
     # Prospector Display layouts (Carrefinho-inspired)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/prospector_layouts.c)
