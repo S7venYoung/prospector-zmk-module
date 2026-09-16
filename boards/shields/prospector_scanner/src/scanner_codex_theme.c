@@ -108,7 +108,7 @@ void scanner_codex_theme_create(lv_obj_t *screen) {
     lv_obj_set_pos(used_caption, 8, 9);
     lv_obj_t *used_marks = text(used, "///", &lv_font_montserrat_16, YELLOW);
     lv_obj_set_pos(used_marks, 94, 8);
-    host_left = text(used, "--%", &lv_font_montserrat_48, YELLOW);
+    host_left = text(used, "--%", &lv_font_montserrat_36, YELLOW);
     value_center(host_left, 4, 31, 114);
 
     lv_obj_t *tokens = panel(screen, 144, 48, 122, 96, INK, YELLOW, 14);
@@ -116,7 +116,7 @@ void scanner_codex_theme_create(lv_obj_t *screen) {
     lv_obj_set_pos(tokens_caption, 8, 9);
     lv_obj_t *tokens_marks = text(tokens, "///", &lv_font_montserrat_16, YELLOW);
     lv_obj_set_pos(tokens_marks, 94, 8);
-    host_tokens = text(tokens, "--", &lv_font_montserrat_36, PAPER);
+    host_tokens = text(tokens, "--", &lv_font_montserrat_28, PAPER);
     value_center(host_tokens, 2, 38, 118);
 
     lv_obj_t *bar = panel(screen, 14, 150, 252, 32, INK, MUTED, 10);
