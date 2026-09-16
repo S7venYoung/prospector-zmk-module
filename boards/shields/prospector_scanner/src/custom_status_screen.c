@@ -964,6 +964,12 @@ lv_obj_t *zmk_display_status_screen(void) {
                 prospector_layouts_get_name(kconfig_layout));
     }
 #else
+    /* The scanner idle renderer is the real boot screen too.  The legacy
+     * widgets above are created by the original status-screen entry point;
+     * clean them before creating the radar so boot and post-swipe screens
+     * always use exactly the same renderer. */
+    destroy_main_screen_widgets();
+    create_main_screen_widgets();
     current_screen = SCREEN_MAIN;
 #endif
 
