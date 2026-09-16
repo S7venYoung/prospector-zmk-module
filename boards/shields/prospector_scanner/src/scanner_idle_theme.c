@@ -1,4 +1,5 @@
 #include "scanner_idle_theme.h"
+#include "fonts_carrefinho.h"
 #include <stdio.h>
 
 /* Runtime channel is owned by the scanner core; this idle page only renders it. */
@@ -14,6 +15,7 @@ extern uint8_t scanner_get_runtime_channel(void);
 
 static lv_obj_t *root;
 static lv_obj_t *sweep_arc;
+static lv_obj_t *beam_group;
 static lv_obj_t *target_pips[3];
 static lv_timer_t *scan_timer;
 static lv_obj_t *channel_value;
@@ -30,6 +32,7 @@ static void scanner_idle_scan_tick(lv_timer_t *timer) {
 
     scan_angle = (scan_angle + 1) % 360;
     lv_arc_set_rotation(sweep_arc, scan_angle);
+    lv_obj_set_style_transform_angle(beam_group, scan_angle * 10, 0);
 
     uint8_t channel = scanner_get_runtime_channel();
     if (channel != last_channel && channel_value) {
@@ -140,9 +143,10 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     lv_obj_set_style_radius(screen, 24, 0);
 
     /* Header stays inside the physical rounded-glass safe area. */
-    label(screen, "PROSPECTOR", &lv_font_montserrat_12, PAPER, 20, 10);
-    label(screen, "//", &lv_font_montserrat_16, YELLOW, 113, 8);
-    label(screen, "SCAN", &lv_font_montserrat_16, YELLOW, 140, 8);
+    /* Embedded condensed display font: matches the bold Dongle/Codex treatment. */
+    label(screen, "PROSPECTOR", &DINishCondensed_SemiBold_20, PAPER, 17, 6);
+    label(screen, "//", &DINishCondensed_SemiBold_20, YELLOW, 127, 6);
+    label(screen, "SCAN", &DINishCondensed_SemiBold_20, YELLOW, 157, 6);
     lv_obj_t *rule = lv_obj_create(screen);
     plain(rule, STEEL);
     lv_obj_set_size(rule, 244, 1);
@@ -172,6 +176,32 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     lv_obj_set_style_arc_opa(sweep_arc, LV_OPA_COVER, LV_PART_INDICATOR);
     lv_obj_set_style_arc_width(sweep_arc, 0, LV_PART_MAIN);
     lv_obj_remove_flag(sweep_arc, LV_OBJ_FLAG_CLICKABLE);
+
+    /* Rotating scan pointer: stacked translucent bars create a tapered beam
+     * without a canvas or optional LVGL line widget. Its pivot is the radar
+     * centre, so only this beam turns while rings and tick marks remain fixed. */
+    beam_group = lv_obj_create(screen);
+    lv_obj_remove_style_all(beam_group);
+    lv_obj_set_size(beam_group, 14, 57);
+    lv_obj_set_pos(beam_group, 132, 34);
+    lv_obj_set_style_bg_opa(beam_group, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(beam_group, 0, 0);
+    lv_obj_set_style_pad_all(beam_group, 0, 0);
+    lv_obj_remove_flag(beam_group, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_transform_pivot_x(beam_group, 7, 0);
+    lv_obj_set_style_transform_pivot_y(beam_group, 7, 56);
+    const uint8_t beam_widths[] = {13, 11, 9, 7, 5, 3};
+    const uint8_t beam_heights[] = {8, 9, 10, 10, 10, 10};
+    const uint8_t beam_opacity[] = {LV_OPA_18, LV_OPA_25, LV_OPA_35, LV_OPA_45, LV_OPA_60, LV_OPA_COVER};
+    int beam_y = 0;
+    for (int i = 0; i < 6; i++) {
+        lv_obj_t *slice = lv_obj_create(beam_group);
+        plain(slice, YELLOW);
+        lv_obj_set_size(slice, beam_widths[i], beam_heights[i]);
+        lv_obj_set_pos(slice, (14 - beam_widths[i]) / 2, beam_y);
+        lv_obj_set_style_bg_opa(slice, beam_opacity[i], 0);
+        beam_y += beam_heights[i];
+    }
 
     const int pips[][2] = {{109, 68}, {166, 102}, {122, 119}};
     for (int i = 0; i < 3; i++) {
@@ -215,6 +245,7 @@ void scanner_idle_theme_destroy(void) {
         scan_timer = NULL;
     }
     sweep_arc = NULL;
+    beam_group = NULL;
     channel_value = NULL;
     last_channel = 0xFF;
     for (int i = 0; i < 3; i++) {
