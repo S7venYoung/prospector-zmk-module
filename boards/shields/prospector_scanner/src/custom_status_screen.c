@@ -36,6 +36,7 @@
 #include "brightness_control.h"  /* For auto brightness sensor control */
 #include "display_settings.h"   /* NVS persistence for display settings */
 #include "prospector_layouts.h"  /* Carrefinho-inspired display layouts */
+#include "scanner_theme.h"        /* normalized state for all display themes */
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
 LOG_MODULE_REGISTER(display_screen, LOG_LEVEL_INF);
@@ -594,6 +595,7 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             /* Layer name from BLE advertisement (4 chars, not null-terminated) */
             memcpy(kb_data.current_layer_name, data.layer_name, 4);
             kb_data.current_layer_name[4] = '\0';
+            prospector_scanner_theme_update(&kb_data);
             prospector_layouts_update(&kb_data);
         } else {
             /* SCREEN_MAIN: Update YADS-style widgets */
