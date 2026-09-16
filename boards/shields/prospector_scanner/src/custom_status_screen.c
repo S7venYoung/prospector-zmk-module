@@ -38,6 +38,7 @@
 #include "prospector_layouts.h"  /* Carrefinho-inspired display layouts */
 #include "scanner_theme.h"        /* normalized state for all display themes */
 #include "scanner_codex_theme.h"  /* scanner-native Codex renderer */
+#include "scanner_host_status.h"
 #include "scanner_walle_theme.h"
 #include "scanner_weather_theme.h"
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
@@ -533,6 +534,12 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
     if (current_screen != SCREEN_MAIN && current_screen != SCREEN_PROSPECTOR_DISPLAY) {
         return;
     }
+
+    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
+    if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
+        scanner_codex_theme_host_update(scanner_host_status_get());
+    }
+    #endif
 
     /* Check for pending display update */
     struct pending_display_data data;
