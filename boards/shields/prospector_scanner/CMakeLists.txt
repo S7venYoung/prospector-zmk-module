@@ -36,6 +36,7 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
 
     # Shared scanner data bridge for all theme renderers
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_theme.c)
+    target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_idle_theme.c)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_host_status.c)
     target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX app PRIVATE src/scanner_codex_theme.c)
     target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE app PRIVATE src/scanner_walle_theme.c)
