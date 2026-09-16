@@ -34,6 +34,9 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
     # NerdFont for modifier icons
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/fonts/NerdFonts_Regular_40.c)
 
+    # Shared scanner data bridge for all theme renderers
+    target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_theme.c)
+
     # Prospector Display layouts (Carrefinho-inspired)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/prospector_layouts.c)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/field_layout.c)
