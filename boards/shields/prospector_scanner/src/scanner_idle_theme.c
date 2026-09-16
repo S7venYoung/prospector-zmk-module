@@ -9,6 +9,28 @@
 #define GREEN 0x82F060
 
 static lv_obj_t *root;
+static lv_obj_t *sweep_arc;
+static lv_obj_t *target_pips[3];
+static lv_timer_t *scan_timer;
+static uint16_t scan_angle;
+static uint8_t scan_tick;
+
+static void scanner_idle_scan_tick(lv_timer_t *timer) {
+    ARG_UNUSED(timer);
+    if (!sweep_arc) {
+        return;
+    }
+
+    scan_angle = (scan_angle + 8) % 360;
+    lv_arc_set_rotation(sweep_arc, scan_angle);
+
+    /* A subtle running target pulse keeps the screen alive without flashing. */
+    scan_tick++;
+    for (int i = 0; i < 3; i++) {
+        lv_obj_set_style_bg_opa(target_pips[i],
+                                i == (scan_tick / 5) % 3 ? LV_OPA_COVER : LV_OPA_55, 0);
+    }
+}
 
 static void plain(lv_obj_t *obj, uint32_t color) {
     lv_obj_remove_style_all(obj);
@@ -120,18 +142,18 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     lv_obj_set_style_bg_opa(vline, LV_OPA_40, 0);
 
     /* Sweep: bright arc plus three candidate pips. */
-    lv_obj_t *sweep = lv_arc_create(screen);
-    lv_obj_remove_style_all(sweep);
-    lv_obj_set_size(sweep, 90, 90);
-    lv_obj_set_pos(sweep, 95, 36);
-    lv_arc_set_range(sweep, 0, 100);
-    lv_arc_set_value(sweep, 25);
-    lv_arc_set_bg_angles(sweep, 315, 55);
-    lv_obj_set_style_arc_width(sweep, 3, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_color(sweep, lv_color_hex(YELLOW), LV_PART_INDICATOR);
-    lv_obj_set_style_arc_opa(sweep, LV_OPA_COVER, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(sweep, 0, LV_PART_MAIN);
-    lv_obj_remove_flag(sweep, LV_OBJ_FLAG_CLICKABLE);
+    sweep_arc = lv_arc_create(screen);
+    lv_obj_remove_style_all(sweep_arc);
+    lv_obj_set_size(sweep_arc, 90, 90);
+    lv_obj_set_pos(sweep_arc, 95, 36);
+    lv_arc_set_range(sweep_arc, 0, 100);
+    lv_arc_set_value(sweep_arc, 25);
+    lv_arc_set_bg_angles(sweep_arc, 315, 55);
+    lv_obj_set_style_arc_width(sweep_arc, 3, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(sweep_arc, lv_color_hex(YELLOW), LV_PART_INDICATOR);
+    lv_obj_set_style_arc_opa(sweep_arc, LV_OPA_COVER, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(sweep_arc, 0, LV_PART_MAIN);
+    lv_obj_remove_flag(sweep_arc, LV_OBJ_FLAG_CLICKABLE);
 
     const int pips[][2] = {{118, 62}, {160, 89}, {125, 102}};
     for (int i = 0; i < 3; i++) {
@@ -140,6 +162,7 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
         lv_obj_set_size(pip, 7, 7);
         lv_obj_set_pos(pip, pips[i][0], pips[i][1]);
         lv_obj_set_style_radius(pip, LV_RADIUS_CIRCLE, 0);
+        target_pips[i] = pip;
     }
     lv_obj_t *core = lv_obj_create(screen);
     plain(core, YELLOW); lv_obj_set_size(core, 12, 12); lv_obj_set_pos(core, 134, 75);
@@ -166,8 +189,20 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     label(telemetry, "CH 0", &lv_font_montserrat_12, PAPER, 16, 6);
     label(telemetry, "RSSI --", &lv_font_montserrat_12, MUTED, 92, 6);
     label(telemetry, "0.0 HZ", &lv_font_montserrat_12, YELLOW, 177, 6);
+
+    scan_angle = 0;
+    scan_tick = 0;
+    scan_timer = lv_timer_create(scanner_idle_scan_tick, 90, NULL);
 }
 
 void scanner_idle_theme_destroy(void) {
+    if (scan_timer) {
+        lv_timer_del(scan_timer);
+        scan_timer = NULL;
+    }
+    sweep_arc = NULL;
+    for (int i = 0; i < 3; i++) {
+        target_pips[i] = NULL;
+    }
     root = NULL;
 }
