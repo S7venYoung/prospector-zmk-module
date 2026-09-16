@@ -1,0 +1,9 @@
+#include "scanner_weather_theme.h"
+#include <lvgl.h>
+#include <zephyr/sys/printk.h>
+static lv_obj_t *layer,*wpm,*lbat,*rbat;
+static lv_obj_t *t(lv_obj_t*p,const char*s,const lv_font_t*f,uint32_t c,int x,int y){lv_obj_t*o=lv_label_create(p);lv_label_set_text(o,s);lv_obj_set_style_text_font(o,f,0);lv_obj_set_style_text_color(o,lv_color_hex(c),0);lv_obj_set_pos(o,x,y);return o;}
+static lv_obj_t *box(lv_obj_t*p,int x,int y,int w,int h,uint32_t c){lv_obj_t*o=lv_obj_create(p);lv_obj_remove_style_all(o);lv_obj_set_size(o,w,h);lv_obj_set_pos(o,x,y);lv_obj_set_style_bg_color(o,lv_color_hex(c),0);lv_obj_set_style_bg_opa(o,LV_OPA_COVER,0);lv_obj_set_style_radius(o,16,0);return o;}
+void scanner_weather_theme_create(lv_obj_t*s){box(s,0,0,280,240,0x050505);t(s,"WEATHER",&lv_font_montserrat_20,0xF3EEE5,82,12);t(s,"SUN",&lv_font_montserrat_20,0xFFC21A,24,48);t(s,"-- C",&lv_font_montserrat_28,0xFFC21A,110,43);box(s,35,85,210,28,0xD6A72A);t(s,"HOST TIME",&lv_font_montserrat_20,0x101411,81,88);t(s,"--:--",&lv_font_montserrat_28,0xF3EEE5,76,121);box(s,14,172,252,56,0xD6A72A);t(s,"WPM",&lv_font_montserrat_16,0x101411,27,179);wpm=t(s,"0",&lv_font_montserrat_20,0x101411,37,199);lbat=t(s,"L --%",&lv_font_montserrat_20,0x101411,100,195);rbat=t(s,"R --%",&lv_font_montserrat_20,0x101411,190,195);layer=t(s,"BASE",&lv_font_montserrat_12,0xF3EEE5,122,153);}
+void scanner_weather_theme_destroy(void){layer=wpm=lbat=rbat=NULL;}
+void scanner_weather_theme_update(const struct prospector_keyboard_data*d){if(!d||!layer)return;lv_label_set_text(layer,d->current_layer_name[0]?d->current_layer_name:"BASE");char b[12];snprintk(b,sizeof(b),"%u",d->wpm_value);lv_label_set_text(wpm,b);snprintk(b,sizeof(b),"L %u%%",d->battery_level);lv_label_set_text(lbat,b);snprintk(b,sizeof(b),"R %u%%",d->peripheral_battery[0]);lv_label_set_text(rbat,b);}
