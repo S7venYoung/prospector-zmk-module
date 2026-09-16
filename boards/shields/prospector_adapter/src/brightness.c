@@ -149,8 +149,11 @@ extern void als_thread(void *d0, void *d1, void *d2) {
 K_THREAD_DEFINE(als_tid, 1024, als_thread, NULL, NULL, NULL, K_LOWEST_APPLICATION_THREAD_PRIO, 0,
                 0);
 
-#else
+#elif !defined(CONFIG_PROSPECTOR_SETTINGS)
 
+/* When preferences are enabled, prospector_settings.c restores the saved
+ * brightness during startup. Do not overwrite that value with the compile-time
+ * default afterwards. */
 static int init_fixed_brightness(void) {
     prospector_set_brightness(CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
 
