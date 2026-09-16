@@ -30,25 +30,23 @@ static lv_obj_t *label(lv_obj_t *parent, const char *value, const lv_font_t *fon
     return obj;
 }
 
-static void line(lv_obj_t *parent, const lv_point_t *points, uint16_t count, uint32_t color, uint8_t width) {
-    lv_obj_t *obj = lv_line_create(parent);
-    lv_line_set_points(obj, points, count);
-    lv_obj_set_style_line_color(obj, lv_color_hex(color), 0);
-    lv_obj_set_style_line_width(obj, width, 0);
-    lv_obj_set_style_line_rounded(obj, true, 0);
-}
-
 static void bluetooth_icon(lv_obj_t *parent, int x, int y) {
-    static const lv_point_t stem[] = {{7, 0}, {7, 20}};
-    static const lv_point_t upper[] = {{7, 0}, {14, 6}, {0, 14}, {7, 20}};
-    static const lv_point_t lower[] = {{7, 0}, {0, 6}, {14, 14}, {7, 20}};
-    lv_obj_t *group = lv_obj_create(parent);
-    plain(group, INK);
-    lv_obj_set_size(group, 15, 21);
-    lv_obj_set_pos(group, x, y);
-    line(group, stem, 2, YELLOW, 2);
-    line(group, upper, 4, YELLOW, 2);
-    line(group, lower, 4, YELLOW, 2);
+    /* Pixel-built Bluetooth rune: avoids an optional icon-font dependency. */
+    static const char *const pixels[] = {
+        "..X..", "..XX.", "X.X.X", ".XX..", "X.X.X", "..XX.", "..X.."
+    };
+    for (int row = 0; row < 7; row++) {
+        for (int col = 0; col < 5; col++) {
+            if (pixels[row][col] != 'X') {
+                continue;
+            }
+            lv_obj_t *pixel = lv_obj_create(parent);
+            plain(pixel, YELLOW);
+            lv_obj_set_size(pixel, 3, 3);
+            lv_obj_set_pos(pixel, x + col * 3, y + row * 3);
+            lv_obj_set_style_radius(pixel, 1, 0);
+        }
+    }
 }
 
 static void keyboard_icon(lv_obj_t *parent, int x, int y) {
