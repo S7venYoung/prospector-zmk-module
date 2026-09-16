@@ -1,4 +1,8 @@
 #include "scanner_idle_theme.h"
+#include <stdio.h>
+
+/* Runtime channel is owned by the scanner core; this idle page only renders it. */
+extern uint8_t scanner_get_runtime_channel(void);
 
 #define INK 0x0B1010
 #define GRID 0x172022
@@ -12,8 +16,11 @@ static lv_obj_t *root;
 static lv_obj_t *sweep_arc;
 static lv_obj_t *target_pips[3];
 static lv_timer_t *scan_timer;
+static lv_obj_t *channel_value;
 static uint16_t scan_angle;
 static uint8_t scan_tick;
+static uint8_t last_channel = 0xFF;
+static char channel_text[8];
 
 static void scanner_idle_scan_tick(lv_timer_t *timer) {
     ARG_UNUSED(timer);
@@ -23,6 +30,17 @@ static void scanner_idle_scan_tick(lv_timer_t *timer) {
 
     scan_angle = (scan_angle + 1) % 360;
     lv_arc_set_rotation(sweep_arc, scan_angle);
+
+    uint8_t channel = scanner_get_runtime_channel();
+    if (channel != last_channel && channel_value) {
+        last_channel = channel;
+        if (channel >= 10) {
+            snprintf(channel_text, sizeof(channel_text), "CH ALL");
+        } else {
+            snprintf(channel_text, sizeof(channel_text), "CH %u", channel);
+        }
+        lv_label_set_text_static(channel_value, channel_text);
+    }
 
     /* A subtle running target pulse keeps the screen alive without flashing. */
     scan_tick++;
@@ -182,7 +200,7 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     label(key, "KEYBOARD", &lv_font_montserrat_12, MUTED, 36, 17);
 
     lv_obj_t *telemetry = card(screen, 14, 202, 252, 25, 8);
-    label(telemetry, "CH 0", &lv_font_montserrat_12, PAPER, 16, 6);
+    channel_value = label(telemetry, "CH --", &lv_font_montserrat_12, PAPER, 16, 6);
     label(telemetry, "RSSI --", &lv_font_montserrat_12, MUTED, 92, 6);
     label(telemetry, "0.0 HZ", &lv_font_montserrat_12, YELLOW, 177, 6);
 
@@ -197,6 +215,8 @@ void scanner_idle_theme_destroy(void) {
         scan_timer = NULL;
     }
     sweep_arc = NULL;
+    channel_value = NULL;
+    last_channel = 0xFF;
     for (int i = 0; i < 3; i++) {
         target_pips[i] = NULL;
     }
