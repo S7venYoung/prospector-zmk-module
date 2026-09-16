@@ -192,7 +192,7 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     lv_obj_set_style_transform_pivot_y(beam_group, 7, 56);
     const uint8_t beam_widths[] = {13, 11, 9, 7, 5, 3};
     const uint8_t beam_heights[] = {8, 9, 10, 10, 10, 10};
-    const uint8_t beam_opacity[] = {LV_OPA_18, LV_OPA_25, LV_OPA_35, LV_OPA_45, LV_OPA_60, LV_OPA_COVER};
+    const uint8_t beam_opacity[] = {LV_OPA_10, LV_OPA_20, LV_OPA_30, LV_OPA_40, LV_OPA_50, LV_OPA_COVER};
     int beam_y = 0;
     for (int i = 0; i < 6; i++) {
         lv_obj_t *slice = lv_obj_create(beam_group);
