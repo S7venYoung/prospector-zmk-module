@@ -3,6 +3,8 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
+#include <errno.h>
 #include <zephyr/sys/atomic.h>
 #include <stdlib.h>
 #include <string.h>
