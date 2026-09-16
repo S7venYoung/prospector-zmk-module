@@ -200,6 +200,11 @@ static const struct device *backlight_dev = DEVICE_DT_GET(BACKLIGHT_NODE);
 static const struct device *backlight_dev = NULL;
 #endif
 
+/* The scanner timer runs every 100 ms. Avoid reconfiguring PWM when the
+ * effective level is unchanged: repeated led_set_brightness() calls briefly
+ * blank the ST7789 backlight on this board and look like a screen flicker. */
+static int last_applied_brightness = -1;
+
 static void set_pwm_brightness(uint8_t brightness) {
     if (!backlight_dev || !device_is_ready(backlight_dev)) {
         LOG_WRN("Backlight device not ready");
@@ -209,6 +214,9 @@ static void set_pwm_brightness(uint8_t brightness) {
     if (brightness < 1) {
         brightness = 1;
     }
+    if (last_applied_brightness == brightness) {
+        return;
+    }
     /* INVERT: Backlight circuit is inverted (100% PWM = dark, 0% = bright)
      * So we invert: user's 100% brightness → 0% PWM duty, 1% brightness → 99% PWM */
     uint8_t pwm_value = 100 - brightness;
@@ -216,6 +224,7 @@ static void set_pwm_brightness(uint8_t brightness) {
     if (ret < 0) {
         LOG_ERR("Failed to set brightness: %d", ret);
     } else {
+        last_applied_brightness = brightness;
         LOG_INF("Backlight: user=%d%% -> PWM=%d%%", brightness, pwm_value);
     }
 }
