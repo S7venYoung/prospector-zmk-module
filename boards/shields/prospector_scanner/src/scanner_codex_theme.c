@@ -1,4 +1,5 @@
 #include "scanner_codex_theme.h"
+#include "scanner_host_status.h"
 #include <lvgl.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/util.h>
@@ -79,6 +80,21 @@ static void set_battery(lv_obj_t *value, lv_obj_t *fill, lv_obj_t *dot, uint8_t 
     lv_obj_set_width(fill, MAX(2,(int)level*32/100));
     lv_obj_set_style_bg_color(fill,lv_color_hex(level<20?RED:GREEN),0);
     lv_obj_set_style_bg_color(dot,lv_color_hex(level?GREEN:RED),0);
+}
+void scanner_codex_theme_host_update(const struct scanner_host_status *status) {
+    if (!status || !host_left || !host_tokens || !status->codex_available) return;
+    char left[8]; char tokens[16];
+    snprintk(left, sizeof(left), "%u%%", status->codex_left_percent);
+    if (status->codex_total_tokens >= 1000000U) {
+        snprintk(tokens, sizeof(tokens), "%u.%uM", status->codex_total_tokens / 1000000U,
+                 (status->codex_total_tokens % 1000000U) / 100000U);
+    } else if (status->codex_total_tokens >= 1000U) {
+        snprintk(tokens, sizeof(tokens), "%uK", status->codex_total_tokens / 1000U);
+    } else {
+        snprintk(tokens, sizeof(tokens), "%u", status->codex_total_tokens);
+    }
+    lv_label_set_text(host_left, left);
+    lv_label_set_text(host_tokens, tokens);
 }
 void scanner_codex_theme_update(const struct prospector_keyboard_data *d) {
     if (!d || !layer_value) return;
