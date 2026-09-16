@@ -1,6 +1,7 @@
 #include "scanner_codex_theme.h"
 #include <lvgl.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h>
 #include <string.h>
 
 #define INK 0x101411
