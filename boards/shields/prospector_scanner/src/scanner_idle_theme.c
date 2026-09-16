@@ -73,10 +73,10 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     radar_ring(screen, 112, 70, 56);
     lv_obj_t *hline = lv_obj_create(screen);
     plain(hline, YELLOW); lv_obj_set_size(hline, 108, 1); lv_obj_set_pos(hline, 86, 98);
-    lv_obj_set_style_bg_opa(hline, LV_OPA_45, 0);
+    lv_obj_set_style_bg_opa(hline, LV_OPA_40, 0);
     lv_obj_t *vline = lv_obj_create(screen);
     plain(vline, YELLOW); lv_obj_set_size(vline, 1, 108); lv_obj_set_pos(vline, 139, 44);
-    lv_obj_set_style_bg_opa(vline, LV_OPA_45, 0);
+    lv_obj_set_style_bg_opa(vline, LV_OPA_40, 0);
 
     /* Sweep: bright arc plus three candidate pips. */
     lv_obj_t *sweep = lv_arc_create(screen);
