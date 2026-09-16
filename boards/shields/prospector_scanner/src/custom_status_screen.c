@@ -37,6 +37,7 @@
 #include "display_settings.h"   /* NVS persistence for display settings */
 #include "prospector_layouts.h"  /* Carrefinho-inspired display layouts */
 #include "scanner_theme.h"        /* normalized state for all display themes */
+#include "scanner_codex_theme.h"  /* scanner-native Codex renderer */
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
 LOG_MODULE_REGISTER(display_screen, LOG_LEVEL_INF);
@@ -596,7 +597,11 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             memcpy(kb_data.current_layer_name, data.layer_name, 4);
             kb_data.current_layer_name[4] = '\0';
             prospector_scanner_theme_update(&kb_data);
+            #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
+            scanner_codex_theme_update(&kb_data);
+#else
             prospector_layouts_update(&kb_data);
+#endif
         } else {
             /* SCREEN_MAIN: Update YADS-style widgets */
             display_update_device_name(data.device_name);
@@ -3390,7 +3395,11 @@ static void create_keyboard_select_widgets(void) {
 
 static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
+    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
+    scanner_codex_theme_destroy();
+#else
     prospector_layouts_destroy();
+#endif
     LOG_INF("Prospector Display destroyed");
 }
 
@@ -3401,7 +3410,11 @@ static void create_prospector_display_widgets(void) {
     lv_obj_set_style_bg_color(screen_obj, lv_color_black(), 0);
 
     /* Initialize layout system on the screen object */
+    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
+    scanner_codex_theme_create(screen_obj);
+#else
     prospector_layouts_init(screen_obj);
+#endif
 
     /* Restore saved layout style from NVS */
     uint8_t saved_layout = display_settings_get_layout();
