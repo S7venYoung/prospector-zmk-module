@@ -38,15 +38,8 @@ SYS_INIT(preferences_init, APPLICATION, 80);
 uint8_t prospector_settings_brightness(void) { return preferences.brightness; }
 void prospector_settings_set_brightness(uint8_t value) {
     preferences.brightness = CLAMP(value, 1, 100);
+    dirty = loaded;
     prospector_set_brightness(preferences.brightness);
-
-    /* Brightness is adjusted directly from the touch screen. Persist each
-     * completed adjustment so a reset or power loss cannot restore the fixed
-     * boot default before the settings sheet is dismissed. */
-    if (loaded) {
-        int rc = settings_save_one("prospector/display", &preferences, sizeof(preferences));
-        dirty = rc != 0;
-    }
 }
 bool prospector_settings_always_on(void) { return preferences.always_on; }
 void prospector_settings_set_always_on(bool enabled) { preferences.always_on = enabled; dirty = loaded; }
