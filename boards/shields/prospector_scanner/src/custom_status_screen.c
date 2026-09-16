@@ -38,6 +38,8 @@
 #include "prospector_layouts.h"  /* Carrefinho-inspired display layouts */
 #include "scanner_theme.h"        /* normalized state for all display themes */
 #include "scanner_codex_theme.h"  /* scanner-native Codex renderer */
+#include "scanner_walle_theme.h"
+#include "scanner_weather_theme.h"
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
 LOG_MODULE_REGISTER(display_screen, LOG_LEVEL_INF);
@@ -599,6 +601,10 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             prospector_scanner_theme_update(&kb_data);
             #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
             scanner_codex_theme_update(&kb_data);
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
+            scanner_walle_theme_update(&kb_data);
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
+            scanner_weather_theme_update(&kb_data);
 #else
             prospector_layouts_update(&kb_data);
 #endif
@@ -3397,6 +3403,10 @@ static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
     #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     scanner_codex_theme_destroy();
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
+    scanner_walle_theme_destroy();
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
+    scanner_weather_theme_destroy();
 #else
     prospector_layouts_destroy();
 #endif
@@ -3412,6 +3422,10 @@ static void create_prospector_display_widgets(void) {
     /* Initialize layout system on the screen object */
     #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     scanner_codex_theme_create(screen_obj);
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
+    scanner_walle_theme_create(screen_obj);
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
+    scanner_weather_theme_create(screen_obj);
 #else
     prospector_layouts_init(screen_obj);
 #endif
