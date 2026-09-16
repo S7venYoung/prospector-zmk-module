@@ -14,8 +14,7 @@ extern uint8_t scanner_get_runtime_channel(void);
 #define GREEN 0x82F060
 
 static lv_obj_t *root;
-static lv_obj_t *sweep_arc;
-static lv_obj_t *beam_group;
+static lv_obj_t *beam_parts[12];
 static lv_obj_t *target_pips[3];
 static lv_timer_t *scan_timer;
 static lv_obj_t *channel_value;
@@ -26,13 +25,21 @@ static char channel_text[8];
 
 static void scanner_idle_scan_tick(lv_timer_t *timer) {
     ARG_UNUSED(timer);
-    if (!sweep_arc) {
+    if (!root) {
         return;
     }
 
-    scan_angle = (scan_angle + 1) % 360;
-    /* Only the centre-anchored beam moves; the radar rim stays fixed. */
-    lv_obj_set_style_transform_angle(beam_group, scan_angle * 10, 0);
+    /* 3 degrees twice per second = a clock-like 6 degrees/second.
+     * Every ray segment is positioned from the actual radar centre, instead
+     * of rotating an object's bounding box around an approximate pivot. */
+    scan_angle = (scan_angle + 3) % 360;
+    for (int i = 0; i < 12; i++) {
+        int radius = 7 + i * 4;
+        int size = i < 5 ? 2 : 3;
+        int x = 140 + (lv_trigo_sin(scan_angle) * radius) / 32767 - size / 2;
+        int y = 90 - (lv_trigo_sin((scan_angle + 90) % 360) * radius) / 32767 - size / 2;
+        lv_obj_set_pos(beam_parts[i], x, y);
+    }
 
     uint8_t channel = scanner_get_runtime_channel();
     if (channel != last_channel && channel_value) {
@@ -163,45 +170,17 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     plain(vline, STEEL); lv_obj_set_size(vline, 1, 108); lv_obj_set_pos(vline, 139, 36);
     lv_obj_set_style_bg_opa(vline, LV_OPA_60, 0);
 
-    /* Sweep: bright arc plus three candidate pips. */
-    sweep_arc = lv_arc_create(screen);
-    lv_obj_remove_style_all(sweep_arc);
-    lv_obj_set_size(sweep_arc, 112, 112);
-    lv_obj_set_pos(sweep_arc, 84, 34);
-    lv_arc_set_range(sweep_arc, 0, 100);
-    lv_arc_set_value(sweep_arc, 25);
-    lv_arc_set_bg_angles(sweep_arc, 315, 55);
-    lv_obj_set_style_arc_width(sweep_arc, 3, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_color(sweep_arc, lv_color_hex(YELLOW), LV_PART_INDICATOR);
-    lv_obj_set_style_arc_opa(sweep_arc, LV_OPA_COVER, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_width(sweep_arc, 0, LV_PART_MAIN);
-    lv_obj_remove_flag(sweep_arc, LV_OBJ_FLAG_CLICKABLE);
-
-    /* Rotating scan pointer: stacked translucent bars create a tapered beam
-     * without a canvas or optional LVGL line widget. Its pivot is the radar
-     * centre, so only this beam turns while rings and tick marks remain fixed. */
-    beam_group = lv_obj_create(screen);
-    lv_obj_remove_style_all(beam_group);
-    lv_obj_set_size(beam_group, 18, 58);
-    /* Radar centre is (140, 90): group bottom-centre is the transform origin. */
-    lv_obj_set_pos(beam_group, 131, 33);
-    lv_obj_set_style_bg_opa(beam_group, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(beam_group, 0, 0);
-    lv_obj_set_style_pad_all(beam_group, 0, 0);
-    lv_obj_remove_flag(beam_group, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_transform_pivot_x(beam_group, 9, 0);
-    lv_obj_set_style_transform_pivot_y(beam_group, 9, 57);
-    const uint8_t beam_widths[] = {17, 15, 12, 9, 6, 3};
-    const uint8_t beam_heights[] = {8, 10, 10, 10, 10, 10};
-    const uint8_t beam_opacity[] = {LV_OPA_30, LV_OPA_40, LV_OPA_50, LV_OPA_60, LV_OPA_80, LV_OPA_COVER};
-    int beam_y = 0;
-    for (int i = 0; i < 6; i++) {
-        lv_obj_t *slice = lv_obj_create(beam_group);
-        plain(slice, YELLOW);
-        lv_obj_set_size(slice, beam_widths[i], beam_heights[i]);
-        lv_obj_set_pos(slice, (18 - beam_widths[i]) / 2, beam_y);
-        lv_obj_set_style_bg_opa(slice, beam_opacity[i], 0);
-        beam_y += beam_heights[i];
+    /* Centre-anchored scanning pointer. The stationary rings stay clean:
+     * this is the only yellow moving element. */
+    for (int i = 0; i < 12; i++) {
+        int size = i < 5 ? 2 : 3;
+        lv_obj_t *part = lv_obj_create(screen);
+        plain(part, YELLOW);
+        lv_obj_set_size(part, size, size);
+        lv_obj_set_pos(part, 140 - size / 2, 83 - i * 4);
+        lv_obj_set_style_radius(part, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_bg_opa(part, i < 4 ? LV_OPA_50 : LV_OPA_COVER, 0);
+        beam_parts[i] = part;
     }
 
     const int pips[][2] = {{109, 68}, {166, 102}, {122, 119}};
@@ -237,7 +216,7 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
 
     scan_angle = 0;
     scan_tick = 0;
-    scan_timer = lv_timer_create(scanner_idle_scan_tick, 166, NULL);
+    scan_timer = lv_timer_create(scanner_idle_scan_tick, 500, NULL);
 }
 
 void scanner_idle_theme_destroy(void) {
@@ -245,8 +224,9 @@ void scanner_idle_theme_destroy(void) {
         lv_timer_del(scan_timer);
         scan_timer = NULL;
     }
-    sweep_arc = NULL;
-    beam_group = NULL;
+    for (int i = 0; i < 12; i++) {
+        beam_parts[i] = NULL;
+    }
     channel_value = NULL;
     last_channel = 0xFF;
     for (int i = 0; i < 3; i++) {
