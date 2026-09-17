@@ -44,6 +44,12 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
         src/fonts_codex/impact_20.c
         src/fonts_codex/impact_48.c
         src/fonts_codex/impact_56.c)
+    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2 app PRIVATE
+        src/scanner_codex2_theme.c
+        src/fonts_codex/impact_16.c
+        src/fonts_codex/impact_20.c
+        src/fonts_codex/impact_48.c
+        src/fonts_codex/impact_56.c)
     target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE app PRIVATE src/scanner_walle_theme.c)
     target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER app PRIVATE src/scanner_weather_theme.c)
 
