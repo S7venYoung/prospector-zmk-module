@@ -39,8 +39,26 @@ static void scanner_idle_refresh_channel(void) {
 
 static void scanner_idle_scan_tick(lv_timer_t *timer) {
     ARG_UNUSED(timer);
-    if (!root) {
-        return;
+    if (!root) return;
+
+    /* Move only the centre-anchored sweep.  Nothing here writes PWM/backlight,
+     * so restoring the scan animation cannot change the saved brightness. */
+    static const int8_t sweep_x[24] = {
+         0, 12, 24, 34, 42, 46, 48, 46, 42, 34, 24, 12,
+         0,-12,-24,-34,-42,-46,-48,-46,-42,-34,-24,-12
+    };
+    static const int8_t sweep_y[24] = {
+       -48,-46,-42,-34,-24,-12,  0, 12, 24, 34, 42, 46,
+        48, 46, 42, 34, 24, 12,  0,-12,-24,-34,-42,-46
+    };
+    scan_angle = (scan_angle + 1U) % ARRAY_SIZE(sweep_x);
+    for (int i = 0; i < ARRAY_SIZE(beam_parts); i++) {
+        if (!beam_parts[i]) continue;
+        const int size = i < 5 ? 2 : 3;
+        const int distance = (i + 1) * 4;
+        lv_obj_set_pos(beam_parts[i],
+                       140 + (sweep_x[scan_angle] * distance) / 48 - size / 2,
+                        90 + (sweep_y[scan_angle] * distance) / 48 - size / 2);
     }
     scanner_idle_refresh_channel();
 }
@@ -204,10 +222,9 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
     last_channel = 0xFF;
     scanner_idle_refresh_channel();
 
-    /* The ST7789 path flushes a whole frame for each moving object. Keeping
-     * the unpaired idle screen static prevents visible LCD/backlight flashing.
-     * Animation resumes only after a future partial-flush renderer is used. */
-    scan_timer = NULL;
+    /* A slow sweep makes the scanner state legible without writing PWM or
+     * re-creating the screen.  Only the pointer objects are invalidated. */
+    scan_timer = lv_timer_create(scanner_idle_scan_tick, 180, NULL);
 }
 
 void scanner_idle_theme_destroy(void) {
