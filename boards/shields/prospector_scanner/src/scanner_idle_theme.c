@@ -60,6 +60,15 @@ static void scanner_idle_scan_tick(lv_timer_t *timer) {
                        140 + (sweep_x[scan_angle] * distance) / 48 - size / 2,
                         90 + (sweep_y[scan_angle] * distance) / 48 - size / 2);
     }
+    /* Targets pulse in sequence so the radar does not look frozen while
+     * retaining the lightweight pointer-only animation. */
+    scan_tick++;
+    for (int i = 0; i < 3; i++) {
+        if (target_pips[i]) {
+            lv_obj_set_style_bg_opa(target_pips[i],
+                                    ((scan_tick / 2U) % 3U) == i ? LV_OPA_COVER : LV_OPA_40, 0);
+        }
+    }
     scanner_idle_refresh_channel();
 }
 
