@@ -23,8 +23,14 @@ static const struct device *backlight_dev = DEVICE_DT_GET(BACKLIGHT_NODE);
 #define HAS_PWM_BACKLIGHT 0
 #endif
 
-/* Default brightness (0-100) */
-#define DEFAULT_BRIGHTNESS 65
+/* Match the normal runtime brightness before the display thread starts.
+ * The scanner's backlight transistor is inverted: 100% user brightness
+ * means 0% PWM duty. */
+#ifdef CONFIG_PROSPECTOR_FIXED_BRIGHTNESS
+#define DEFAULT_BRIGHTNESS CONFIG_PROSPECTOR_FIXED_BRIGHTNESS
+#else
+#define DEFAULT_BRIGHTNESS 60
+#endif
 
 /* The old 3s k_timer "heartbeat" was removed: it called
  * display_get_capabilities() from ISR context every 15s and logged 1200
@@ -42,14 +48,17 @@ static int backlight_init(void) {
         return -ENODEV;
     }
 
-    /* Set initial brightness to default value */
-    ret = led_set_brightness(backlight_dev, 0, DEFAULT_BRIGHTNESS);
+    /* Use the same inverted duty convention as set_pwm_brightness() in the
+     * display thread. Previously boot used the opposite polarity, then the
+     * display thread corrected it, producing a visible brightness jump. */
+    uint8_t pwm_duty = 100 - DEFAULT_BRIGHTNESS;
+    ret = led_set_brightness(backlight_dev, 0, pwm_duty);
     if (ret < 0) {
         LOG_ERR("Failed to set backlight brightness: %d", ret);
         return ret;
     }
 
-    LOG_INF("Backlight turned ON at %d%% brightness", DEFAULT_BRIGHTNESS);
+    LOG_INF("Backlight initialized: user=%d%% -> PWM=%d%%", DEFAULT_BRIGHTNESS, pwm_duty);
 
     return 0;
 }
