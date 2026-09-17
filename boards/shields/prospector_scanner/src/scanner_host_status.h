@@ -5,12 +5,14 @@
 
 /* Newline-delimited protocol over the scanner's existing USB CDC ACM port.
  * PING                      -> PROSPECTOR-SCANNER/1
- * CODEX <left-percent> <tokens> -> OK
+ * CODEX <left-percent> <tokens> [week-left-percent] -> OK
  * This is intentionally separate from ZMK Studio RPC: a scanner is a
  * standalone BLE observer and must not require DYA/Studio to be running. */
 struct scanner_host_status {
     uint8_t codex_left_percent;
     uint32_t codex_total_tokens;
+    uint8_t codex_week_left_percent;
+    bool codex_week_available;
     bool codex_available;
 };
 
