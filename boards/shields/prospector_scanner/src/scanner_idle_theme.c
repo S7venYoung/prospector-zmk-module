@@ -51,8 +51,8 @@ static void scanner_idle_scan_tick(lv_timer_t *timer) {
        -48,-46,-42,-34,-24,-12,  0, 12, 24, 34, 42, 46,
         48, 46, 42, 34, 24, 12,  0,-12,-24,-34,-42,-46
     };
-    scan_angle = (scan_angle + 1U) % ARRAY_SIZE(sweep_x);
-    for (int i = 0; i < ARRAY_SIZE(beam_parts); i++) {
+    scan_angle = (scan_angle + 1U) % 24U;
+    for (int i = 0; i < 12; i++) {
         if (!beam_parts[i]) continue;
         const int size = i < 5 ? 2 : 3;
         const int distance = (i + 1) * 4;
