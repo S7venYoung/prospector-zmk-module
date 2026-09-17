@@ -134,6 +134,11 @@ void scanner_codex_theme_create(lv_obj_t *screen) {
     lv_obj_set_style_text_align(wpm_value, LV_TEXT_ALIGN_RIGHT, 0);
     battery_card(screen, 14, "L", &left_value, &left_fill, &left_dot);
     battery_card(screen, 144, "R", &right_value, &right_fill, &right_dot);
+
+    /* The scanner keeps host metrics across page changes.  Repaint that cache
+     * immediately when this view is recreated instead of waiting for a new
+     * serial CODEX message from macOS. */
+    scanner_codex_theme_host_update(scanner_host_status_get());
 }
 void scanner_codex_theme_destroy(void) {
     layer_value = wpm_value = left_value = right_value = NULL;
