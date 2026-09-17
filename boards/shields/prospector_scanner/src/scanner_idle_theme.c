@@ -23,41 +23,26 @@ static uint8_t scan_tick;
 static uint8_t last_channel = 0xFF;
 static char channel_text[8];
 
+static void scanner_idle_refresh_channel(void) {
+    uint8_t channel = scanner_get_runtime_channel();
+    if (channel == last_channel || !channel_value) {
+        return;
+    }
+    last_channel = channel;
+    if (channel >= 10) {
+        snprintf(channel_text, sizeof(channel_text), "CH ALL");
+    } else {
+        snprintf(channel_text, sizeof(channel_text), "CH %u", channel);
+    }
+    lv_label_set_text_static(channel_value, channel_text);
+}
+
 static void scanner_idle_scan_tick(lv_timer_t *timer) {
     ARG_UNUSED(timer);
     if (!root) {
         return;
     }
-
-    /* 3 degrees twice per second = a clock-like 6 degrees/second.
-     * Every ray segment is positioned from the actual radar centre, instead
-     * of rotating an object's bounding box around an approximate pivot. */
-    scan_angle = (scan_angle + 3) % 360;
-    for (int i = 0; i < 12; i++) {
-        int radius = 7 + i * 4;
-        int size = i < 5 ? 2 : 3;
-        int x = 140 + (lv_trigo_sin(scan_angle) * radius) / 32767 - size / 2;
-        int y = 90 - (lv_trigo_sin((scan_angle + 90) % 360) * radius) / 32767 - size / 2;
-        lv_obj_set_pos(beam_parts[i], x, y);
-    }
-
-    uint8_t channel = scanner_get_runtime_channel();
-    if (channel != last_channel && channel_value) {
-        last_channel = channel;
-        if (channel >= 10) {
-            snprintf(channel_text, sizeof(channel_text), "CH ALL");
-        } else {
-            snprintf(channel_text, sizeof(channel_text), "CH %u", channel);
-        }
-        lv_label_set_text_static(channel_value, channel_text);
-    }
-
-    /* A subtle running target pulse keeps the screen alive without flashing. */
-    scan_tick++;
-    for (int i = 0; i < 3; i++) {
-        lv_obj_set_style_bg_opa(target_pips[i],
-                                i == (scan_tick / 5) % 3 ? LV_OPA_COVER : LV_OPA_50, 0);
-    }
+    scanner_idle_refresh_channel();
 }
 
 static void plain(lv_obj_t *obj, uint32_t color) {
@@ -216,7 +201,13 @@ void scanner_idle_theme_create(lv_obj_t *screen) {
 
     scan_angle = 0;
     scan_tick = 0;
-    scan_timer = lv_timer_create(scanner_idle_scan_tick, 500, NULL);
+    last_channel = 0xFF;
+    scanner_idle_refresh_channel();
+
+    /* The ST7789 path flushes a whole frame for each moving object. Keeping
+     * the unpaired idle screen static prevents visible LCD/backlight flashing.
+     * Animation resumes only after a future partial-flush renderer is used. */
+    scan_timer = NULL;
 }
 
 void scanner_idle_theme_destroy(void) {
