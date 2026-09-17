@@ -39,6 +39,7 @@
 #include "scanner_theme.h"        /* normalized state for all display themes */
 #include "scanner_idle_theme.h"   /* radar standby screen before a keyboard is found */
 #include "scanner_codex_theme.h"  /* scanner-native Codex renderer */
+#include "scanner_codex2_theme.h" /* 5-hour + 7-day Codex dashboard */
 #include "scanner_host_status.h"
 #include "scanner_walle_theme.h"
 #include "scanner_weather_theme.h"
@@ -548,6 +549,10 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
     #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
         scanner_codex_theme_host_update(scanner_host_status_get());
+    }
+    #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
+    if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
+        scanner_codex2_theme_host_update(scanner_host_status_get());
     }
     #endif
 
@@ -3197,6 +3202,8 @@ static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
     #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     scanner_codex_theme_destroy();
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
+    scanner_codex2_theme_destroy();
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
     scanner_walle_theme_destroy();
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
@@ -3216,6 +3223,8 @@ static void create_prospector_display_widgets(void) {
     /* Initialize layout system on the screen object */
     #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     scanner_codex_theme_create(screen_obj);
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
+    scanner_codex2_theme_create(screen_obj);
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
     scanner_walle_theme_create(screen_obj);
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
