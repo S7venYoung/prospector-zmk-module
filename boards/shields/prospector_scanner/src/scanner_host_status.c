@@ -26,23 +26,23 @@ static void reply(const char *text) {
 
 static void process_line(void) {
     if (strcmp(line, "PING") == 0) {
-        reply("PROSPECTOR-SCANNER/1\\n");
+        reply("PROSPECTOR-SCANNER/1\n");
         return;
     }
     if (strncmp(line, "CODEX ", 6) == 0) {
         char *end = NULL;
         unsigned long left = strtoul(line + 6, &end, 10);
-        if (end == line + 6 || *end != ' ' || left > 100U) { reply("ERR\\n"); return; }
+        if (end == line + 6 || *end != ' ' || left > 100U) { reply("ERR\n"); return; }
         unsigned long tokens = strtoul(end + 1, &end, 10);
-        if (*end != '\\0') { reply("ERR\\n"); return; }
+        if (*end != '\0') { reply("ERR\n"); return; }
         status.codex_left_percent = (uint8_t)left;
         status.codex_total_tokens = (uint32_t)MIN(tokens, UINT32_MAX);
         status.codex_available = true;
         atomic_set(&changed, 1);
-        reply("OK\\n");
+        reply("OK\n");
         return;
     }
-    reply("ERR\\n");
+    reply("ERR\n");
 }
 
 static void host_uart_callback(const struct device *dev, void *user_data) {
@@ -50,9 +50,9 @@ static void host_uart_callback(const struct device *dev, void *user_data) {
     while (uart_irq_update(dev) && uart_irq_rx_ready(dev)) {
         uint8_t byte;
         if (uart_fifo_read(dev, &byte, 1) != 1) { break; }
-        if (byte == '\\r') { continue; }
-        if (byte == '\\n') {
-            line[line_length] = '\\0';
+        if (byte == '\r') { continue; }
+        if (byte == '\n') {
+            line[line_length] = '\0';
             process_line();
             line_length = 0;
         } else if (line_length + 1 < sizeof(line)) {
