@@ -10,6 +10,20 @@ static lv_obj_t *wpm_value;
 static lv_obj_t *left_battery_value;
 static lv_obj_t *right_battery_value;
 
+/* Keep the root setup identical to the proven Codex renderer.  The display
+ * root is shared by the scanner, settings and every status theme; clipping a
+ * rounded root can leave an invalid draw mask behind when this view is
+ * replaced by a swipe. */
+static void plain(lv_obj_t *obj, uint32_t background) {
+    lv_obj_remove_style_all(obj);
+    lv_obj_set_style_bg_color(obj, lv_color_hex(background), 0);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(obj, 0, 0);
+    lv_obj_set_style_radius(obj, 0, 0);
+    lv_obj_set_style_pad_all(obj, 0, 0);
+    lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+}
+
 static lv_obj_t *panel(lv_obj_t *parent, int x, int y, int w, int h,
                        uint32_t background, uint32_t border, int radius) {
     lv_obj_t *obj = lv_obj_create(parent);
@@ -50,13 +64,11 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
     const uint32_t ink = 0x27231C;
     const uint32_t shadow = 0x8A806D;
 
-    lv_obj_remove_style_all(screen);
+    /* Do not use root clip-corner: the scanner reuses this object when
+     * moving between themes, and its mask was the source of the Mac theme
+     * lock-up after a vertical swipe. */
+    plain(screen, paper);
     lv_obj_set_size(screen, 280, 240);
-    lv_obj_set_style_bg_color(screen, lv_color_hex(paper), 0);
-    lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(screen, 0, 0);
-    lv_obj_set_style_radius(screen, 43, 0);
-    lv_obj_set_style_clip_corner(screen, true, 0);
 
     text(screen, "[+]  ZMK Dongle", &lv_font_montserrat_12, ink, 17, 8);
     text(screen, "USB", &lv_font_montserrat_12, ink, 222, 8);
