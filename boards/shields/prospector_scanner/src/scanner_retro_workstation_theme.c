@@ -9,7 +9,8 @@
  * The retro layout is a fixed pixel-art composition, not a dynamic dashboard. */
 static const lv_img_dsc_t retro_workstation_art = {
     .header = {
-        .cf = LV_IMG_CF_TRUE_COLOR,
+        /* ZMK's Zephyr 4.1 LVGL uses the v9 color-format enum. */
+        .cf = LV_COLOR_FORMAT_RGB565,
         .w = 280,
         .h = 240,
     },
