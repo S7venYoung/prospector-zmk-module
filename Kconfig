@@ -692,4 +692,7 @@ config PROSPECTOR_SCANNER_THEME_WALLE
 config PROSPECTOR_SCANNER_THEME_WEATHER
     bool "Weather Clock status theme"
 
+config PROSPECTOR_SCANNER_THEME_RETRO_WORKSTATION
+    bool "Retro Workstation pixel-art theme"
+
 endchoice
