@@ -157,8 +157,10 @@ static void set_battery(lv_obj_t *value, lv_obj_t *fill, lv_obj_t *dot, uint8_t 
 void scanner_codex_theme_host_update(const struct scanner_host_status *status) {
     if (!status || !host_left || !host_tokens || !status->codex_available) return;
     char left[8], tokens[16];
-    snprintk(left, sizeof(left), "%u%%", status->codex_left_percent);
-    if (status->codex_total_tokens >= 1000000U)
+    if (status->codex_left_available) snprintk(left, sizeof(left), "%u%%", status->codex_left_percent);
+    else snprintk(left, sizeof(left), "--%%");
+    if (!status->codex_tokens_available) snprintk(tokens, sizeof(tokens), "--");
+    else if (status->codex_total_tokens >= 1000000U)
         snprintk(tokens, sizeof(tokens), "%u.%uM", status->codex_total_tokens / 1000000U,
                  (status->codex_total_tokens % 1000000U) / 100000U);
     else if (status->codex_total_tokens >= 1000U)

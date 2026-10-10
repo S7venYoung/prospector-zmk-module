@@ -1,4 +1,5 @@
 #include "scanner_host_status.h"
+#include "scanner_host_protocol.h"
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
@@ -26,27 +27,10 @@ static void reply(const char *text) {
 
 static void process_line(void) {
     if (strcmp(line, "PING") == 0) {
-        reply("PROSPECTOR-SCANNER/1\n");
+        reply("PROSPECTOR-SCANNER/2\n");
         return;
     }
-    if (strncmp(line, "CODEX ", 6) == 0) {
-        char *end = NULL;
-        unsigned long left = strtoul(line + 6, &end, 10);
-        if (end == line + 6 || *end != ' ' || left > 100U) { reply("ERR\n"); return; }
-        unsigned long tokens = strtoul(end + 1, &end, 10);
-        bool week_available = false;
-        unsigned long week_left = 0;
-        if (*end == ' ') {
-            week_left = strtoul(end + 1, &end, 10);
-            if (week_left > 100U) { reply("ERR\n"); return; }
-            week_available = true;
-        }
-        if (*end != '\0') { reply("ERR\n"); return; }
-        status.codex_left_percent = (uint8_t)left;
-        status.codex_total_tokens = (uint32_t)MIN(tokens, UINT32_MAX);
-        status.codex_week_left_percent = (uint8_t)week_left;
-        status.codex_week_available = week_available;
-        status.codex_available = true;
+    if (scanner_host_parse(line, &status)) {
         atomic_set(&changed, 1);
         reply("OK\n");
         return;
