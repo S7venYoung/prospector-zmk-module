@@ -67,7 +67,7 @@ static void battery_icon(lv_obj_t *parent, int x, int y, int cells) {
 }
 
 static void side_card(lv_obj_t *screen, int x, const char *title, lv_obj_t **value) {
-    lv_obj_t *card = raised(screen, x, 42, 61, 91);
+    lv_obj_t *card = raised(screen, x, 40, 61, 91);
     label(card, title, &lv_font_unscii_8, 4, 10, 53, LV_TEXT_ALIGN_CENTER);
     rule(card, 5, 28, 51);
     battery_icon(card, 10, 39, 3);
@@ -75,7 +75,7 @@ static void side_card(lv_obj_t *screen, int x, const char *title, lv_obj_t **val
 }
 
 static void modifier(lv_obj_t *screen, int x, const char *name, int slot) {
-    lv_obj_t *key = raised(screen, x, 126, 34, 31);
+    lv_obj_t *key = raised(screen, x, 124, 34, 31);
     label(key, name, &lv_font_unscii_8, 1, 5, 32, LV_TEXT_ALIGN_CENTER);
     modifier_dot[slot] = box(key, 11, 19, 8, 8, PAPER, INK, 1);
 }
@@ -84,15 +84,17 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
     plain(screen, PAPER);
     lv_obj_set_size(screen, 280, 240);
 
-    label(screen, "[+]", &lv_font_unscii_8, 10, 9, 30, LV_TEXT_ALIGN_CENTER);
-    label(screen, "ZMK Dongle", &lv_font_unscii_8, 43, 11, 126, LV_TEXT_ALIGN_LEFT);
-    label(screen, "USB", &impact_20, 224, 8, 44, LV_TEXT_ALIGN_CENTER);
-    rule(screen, 0, 29, 280);
+    /* The 280x240 panel is visibly masked by a round bezel.  Keep all
+     * content inside a 10px horizontal and 7px vertical safe inset. */
+    label(screen, "[+]", &lv_font_unscii_8, 14, 10, 30, LV_TEXT_ALIGN_CENTER);
+    label(screen, "ZMK Dongle", &lv_font_unscii_8, 47, 12, 126, LV_TEXT_ALIGN_LEFT);
+    label(screen, "USB", &impact_20, 218, 9, 44, LV_TEXT_ALIGN_CENTER);
+    rule(screen, 10, 30, 260);
 
-    side_card(screen, 8, "L KB", &left_value);
-    side_card(screen, 211, "R KB", &right_value);
+    side_card(screen, 12, "L KB", &left_value);
+    side_card(screen, 207, "R KB", &right_value);
 
-    lv_obj_t *layer = raised(screen, 79, 37, 122, 84);
+    lv_obj_t *layer = raised(screen, 79, 35, 122, 84);
     box(layer, 6, 7, 13, 11, FACE, INK, 2);
     rule(layer, 30, 8, 82); rule(layer, 30, 14, 82); rule(layer, 30, 20, 82);
     rule(layer, 5, 28, 112);
@@ -102,23 +104,23 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
     modifier(screen, 72, "Ctrl", 0); modifier(screen, 108, "Alt", 1);
     modifier(screen, 144, "Gui", 2); modifier(screen, 180, "Sft", 3);
 
-    lv_obj_t *dongle = raised(screen, 8, 164, 96, 49);
+    lv_obj_t *dongle = raised(screen, 12, 162, 96, 49);
     label(dongle, "Dongle", &lv_font_unscii_8, 7, 5, 80, LV_TEXT_ALIGN_CENTER);
     rule(dongle, 6, 23, 83); battery_icon(dongle, 8, 28, 2);
     dongle_value = label(dongle, "--%", &impact_20, 51, 27, 40, LV_TEXT_ALIGN_CENTER);
 
-    lv_obj_t *mac = raised(screen, 119, 168, 39, 44);
+    lv_obj_t *mac = raised(screen, 119, 166, 39, 44);
     label(mac, "[: ]", &lv_font_unscii_8, 2, 14, 35, LV_TEXT_ALIGN_CENTER);
 
-    lv_obj_t *wpm = raised(screen, 177, 164, 95, 49);
+    lv_obj_t *wpm = raised(screen, 173, 162, 95, 49);
     label(wpm, "WPM", &lv_font_unscii_8, 7, 5, 39, LV_TEXT_ALIGN_LEFT);
     rule(wpm, 5, 23, 85);
     label(wpm, "|||", &lv_font_unscii_8, 7, 29, 25, LV_TEXT_ALIGN_LEFT);
     wpm_value = label(wpm, "0", &impact_20, 45, 24, 44, LV_TEXT_ALIGN_CENTER);
 
-    rule(screen, 0, 218, 280);
-    label(screen, "Type Happy.", &lv_font_unscii_8, 11, 224, 110, LV_TEXT_ALIGN_LEFT);
-    label(screen, "13:37", &lv_font_unscii_8, 222, 224, 48, LV_TEXT_ALIGN_RIGHT);
+    rule(screen, 10, 216, 260);
+    label(screen, "Type Happy.", &lv_font_unscii_8, 15, 221, 110, LV_TEXT_ALIGN_LEFT);
+    label(screen, "13:37", &lv_font_unscii_8, 217, 221, 48, LV_TEXT_ALIGN_RIGHT);
 }
 
 void scanner_retro_workstation_theme_destroy(void) {
