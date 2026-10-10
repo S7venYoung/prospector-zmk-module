@@ -69,6 +69,30 @@ enum screen_state {
 static enum screen_state current_screen = SCREEN_MAIN;
 static lv_obj_t *screen_obj = NULL;
 
+/* The scanner firmware links every renderer. This value changes only on the
+ * display thread, so no locking is required around LVGL objects. */
+enum scanner_status_theme {
+    SCANNER_STATUS_THEME_ORIGINAL = 0,
+    SCANNER_STATUS_THEME_CODEX,
+    SCANNER_STATUS_THEME_CODEX2,
+    SCANNER_STATUS_THEME_WALLE,
+    SCANNER_STATUS_THEME_WEATHER,
+    SCANNER_STATUS_THEME_COUNT,
+};
+
+static enum scanner_status_theme active_status_theme =
+#if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
+    SCANNER_STATUS_THEME_CODEX;
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
+    SCANNER_STATUS_THEME_CODEX2;
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
+    SCANNER_STATUS_THEME_WALLE;
+#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
+    SCANNER_STATUS_THEME_WEATHER;
+#else
+    SCANNER_STATUS_THEME_ORIGINAL;
+#endif
+
 /* Transition protection flag - checked by work queues */
 volatile bool transition_in_progress = false;
 
@@ -112,6 +136,7 @@ static void destroy_keyboard_select_widgets(void);
 static void create_keyboard_select_widgets(void);
 static void destroy_prospector_display_widgets(void);
 static void create_prospector_display_widgets(void);
+static void switch_prospector_status_theme(int8_t direction);
 static void swipe_process_timer_cb(lv_timer_t *timer);
 
 /* Display update functions - called from pending_update_timer_cb */
@@ -546,15 +571,13 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
         return;
     }
 
-    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
     if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
-        scanner_codex_theme_host_update(scanner_host_status_get());
+        if (active_status_theme == SCANNER_STATUS_THEME_CODEX) {
+            scanner_codex_theme_host_update(scanner_host_status_get());
+        } else if (active_status_theme == SCANNER_STATUS_THEME_CODEX2) {
+            scanner_codex2_theme_host_update(scanner_host_status_get());
+        }
     }
-    #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
-    if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
-        scanner_codex2_theme_host_update(scanner_host_status_get());
-    }
-    #endif
 
     /* Check for pending display update */
     struct pending_display_data data;
@@ -621,15 +644,24 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             memcpy(kb_data.current_layer_name, data.layer_name, 4);
             kb_data.current_layer_name[4] = '\0';
             prospector_scanner_theme_update(&kb_data);
-            #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
-            scanner_codex_theme_update(&kb_data);
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
-            scanner_walle_theme_update(&kb_data);
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
-            scanner_weather_theme_update(&kb_data);
-#else
-            prospector_layouts_update(&kb_data);
-#endif
+            switch (active_status_theme) {
+            case SCANNER_STATUS_THEME_CODEX:
+                scanner_codex_theme_update(&kb_data);
+                break;
+            case SCANNER_STATUS_THEME_CODEX2:
+                scanner_codex2_theme_update(&kb_data);
+                break;
+            case SCANNER_STATUS_THEME_WALLE:
+                scanner_walle_theme_update(&kb_data);
+                break;
+            case SCANNER_STATUS_THEME_WEATHER:
+                scanner_weather_theme_update(&kb_data);
+                break;
+            case SCANNER_STATUS_THEME_ORIGINAL:
+            default:
+                prospector_layouts_update(&kb_data);
+                break;
+            }
         } else {
             /* SCREEN_MAIN: Update YADS-style widgets */
             display_update_device_name(data.device_name);
@@ -3200,17 +3232,14 @@ static void create_keyboard_select_widgets(void) {
 
 static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
-    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
-    scanner_codex_theme_destroy();
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
-    scanner_codex2_theme_destroy();
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
-    scanner_walle_theme_destroy();
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
-    scanner_weather_theme_destroy();
-#else
-    prospector_layouts_destroy();
-#endif
+    switch (active_status_theme) {
+    case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_destroy(); break;
+    case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_destroy(); break;
+    case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_destroy(); break;
+    case SCANNER_STATUS_THEME_WEATHER: scanner_weather_theme_destroy(); break;
+    case SCANNER_STATUS_THEME_ORIGINAL:
+    default: prospector_layouts_destroy(); break;
+    }
     LOG_INF("Prospector Display destroyed");
 }
 
@@ -3220,29 +3249,57 @@ static void create_prospector_display_widgets(void) {
     /* Dark background */
     lv_obj_set_style_bg_color(screen_obj, lv_color_black(), 0);
 
-    /* Initialize layout system on the screen object */
-    #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
-    scanner_codex_theme_create(screen_obj);
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
-    scanner_codex2_theme_create(screen_obj);
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
-    scanner_walle_theme_create(screen_obj);
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
-    scanner_weather_theme_create(screen_obj);
-#else
-    prospector_layouts_init(screen_obj);
-#endif
+    switch (active_status_theme) {
+    case SCANNER_STATUS_THEME_CODEX:
+        scanner_codex_theme_create(screen_obj);
+        break;
+    case SCANNER_STATUS_THEME_CODEX2:
+        scanner_codex2_theme_create(screen_obj);
+        break;
+    case SCANNER_STATUS_THEME_WALLE:
+        scanner_walle_theme_create(screen_obj);
+        break;
+    case SCANNER_STATUS_THEME_WEATHER:
+        scanner_weather_theme_create(screen_obj);
+        break;
+    case SCANNER_STATUS_THEME_ORIGINAL:
+    default: {
+        prospector_layouts_init(screen_obj);
+        uint8_t saved_layout = display_settings_get_layout();
+        if (saved_layout != (uint8_t)prospector_layouts_get_style()) {
+            prospector_layouts_set_style((prospector_layout_t)saved_layout);
+        }
+        break;
+    }
+    }
 
-    /* Restore saved layout style from NVS */
-    uint8_t saved_layout = display_settings_get_layout();
-    if (saved_layout != (uint8_t)prospector_layouts_get_style()) {
-        prospector_layouts_set_style((prospector_layout_t)saved_layout);
+    const struct prospector_keyboard_data *cached = prospector_scanner_theme_state();
+    if (cached && cached->has_dynamic_data) {
+        switch (active_status_theme) {
+        case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_update(cached); break;
+        case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_update(cached); break;
+        case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_update(cached); break;
+        case SCANNER_STATUS_THEME_WEATHER: scanner_weather_theme_update(cached); break;
+        case SCANNER_STATUS_THEME_ORIGINAL:
+        default: prospector_layouts_update(cached); break;
+        }
     }
 
     prospector_display_active = true;
 
-    LOG_INF("Prospector Display created (%s)",
-            prospector_layouts_get_name(prospector_layouts_get_style()));
+    LOG_INF("Prospector status theme created: %d", active_status_theme);
+}
+
+static void switch_prospector_status_theme(int8_t direction) {
+    int next = (int)active_status_theme + direction;
+    if (next < 0) next = SCANNER_STATUS_THEME_COUNT - 1;
+    if (next >= SCANNER_STATUS_THEME_COUNT) next = 0;
+    destroy_prospector_display_widgets();
+    lv_obj_clean(screen_obj);
+    active_status_theme = (enum scanner_status_theme)next;
+    create_prospector_display_widgets();
+    lv_obj_invalidate(screen_obj);
+    LOG_INF("Scanner status theme switched to %d", active_status_theme);
 }
 
 /* ========== Swipe Processing (runs in LVGL timer = Main Thread) ========== */
@@ -3318,11 +3375,9 @@ static void swipe_process_timer_cb(lv_timer_t *timer) {
 
     switch (dir) {
     case SWIPE_DIRECTION_DOWN:
-        /* Prospector Display: cycle layout */
+        /* Status dashboard: next theme. Other screens keep their legacy navigation. */
         if (current_screen == SCREEN_PROSPECTOR_DISPLAY) {
-            LOG_INF(">>> Prospector Display: next layout");
-            prospector_layouts_next();
-            display_settings_set_layout((uint8_t)prospector_layouts_get_style());
+            switch_prospector_status_theme(1);
             break;
         }
         /* Main → Display Settings OR Keyboard Select → Main */
@@ -3350,11 +3405,9 @@ static void swipe_process_timer_cb(lv_timer_t *timer) {
         break;
 
     case SWIPE_DIRECTION_UP:
-        /* Prospector Display: cycle layout (reverse) */
+        /* Status dashboard: previous theme. */
         if (current_screen == SCREEN_PROSPECTOR_DISPLAY) {
-            LOG_INF(">>> Prospector Display: prev layout");
-            prospector_layouts_prev();
-            display_settings_set_layout((uint8_t)prospector_layouts_get_style());
+            switch_prospector_status_theme(-1);
             break;
         }
         /* Display Settings → Main OR Main → Keyboard Select */

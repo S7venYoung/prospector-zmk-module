@@ -38,20 +38,17 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_theme.c)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_idle_theme.c)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/scanner_host_status.c)
-    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX app PRIVATE
+    # All scanner status themes are linked together. Kconfig selects the boot
+    # default only; touch navigation switches the active renderer at runtime.
+    target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE
         src/scanner_codex_theme.c
-        src/fonts_codex/impact_16.c
-        src/fonts_codex/impact_20.c
-        src/fonts_codex/impact_48.c
-        src/fonts_codex/impact_56.c)
-    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2 app PRIVATE
         src/scanner_codex2_theme.c
+        src/scanner_walle_theme.c
+        src/scanner_weather_theme.c
         src/fonts_codex/impact_16.c
         src/fonts_codex/impact_20.c
         src/fonts_codex/impact_48.c
         src/fonts_codex/impact_56.c)
-    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE app PRIVATE src/scanner_walle_theme.c)
-    target_sources_ifdef(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER app PRIVATE src/scanner_weather_theme.c)
 
     # Prospector Display layouts (Carrefinho-inspired)
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE src/prospector_layouts.c)
