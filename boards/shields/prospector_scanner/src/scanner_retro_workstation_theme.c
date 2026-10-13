@@ -1,5 +1,6 @@
 #include "scanner_retro_workstation_theme.h"
 #include "system_settings_widget.h"
+#include "mac_modifier_images.h"
 
 #include <lvgl.h>
 #include <zephyr/sys/printk.h>
@@ -16,6 +17,7 @@ LV_FONT_DECLARE(impact_48);
 static lv_obj_t *layer_value, *wpm_value;
 static lv_obj_t *left_value, *right_value, *channel_value;
 static lv_obj_t *modifier_dot[4];
+static lv_obj_t *modifier_icon[4];
 
 static void plain(lv_obj_t *obj, uint32_t color) {
     lv_obj_remove_style_all(obj);
@@ -77,21 +79,13 @@ static void side_card(lv_obj_t *screen, int x, const char *title, lv_obj_t **val
 
 static void modifier(lv_obj_t *screen, int x, const char *name, int slot) {
     (void)name;
-    /* Pixel paths for Control, Option, Command and Shift, independent of fonts. */
-    static const uint16_t pixels[4][9] = {
-        {0x010,0x028,0x044,0x082,0x101,0,0,0,0},
-        {0x1C0,0x040,0x040,0x020,0x020,0x010,0x010,0x00F,0},
-        {0x0C6,0x129,0x129,0x1FF,0x044,0x1FF,0x129,0x129,0x0C6},
-        {0x010,0x028,0x044,0x082,0x1C7,0x044,0x044,0x044,0x07C}
-    };
     lv_obj_t *key = raised(screen, x, 111, 34, 28);
     modifier_dot[slot] = key;
-    for (int y = 0; y < 9; y++) for (int col = 0; col < 9;) {
-        if (!(pixels[slot][y] & (1U << (8-col)))) { col++; continue; }
-        int start = col++;
-        while (col < 9 && (pixels[slot][y] & (1U << (8-col)))) col++;
-        box(key, 8+start*2, 5+y*2, (col-start)*2, 2, INK, INK, 0);
-    }
+    modifier_icon[slot] = lv_image_create(key);
+    lv_image_set_src(modifier_icon[slot], mac_modifier_images[slot]);
+    lv_obj_set_pos(modifier_icon[slot], 8, 5);
+    lv_obj_set_style_image_recolor(modifier_icon[slot], lv_color_hex(INK), 0);
+    lv_obj_set_style_image_recolor_opa(modifier_icon[slot], LV_OPA_COVER, 0);
 }
 
 static void macintosh(lv_obj_t *screen) {
@@ -164,7 +158,7 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
 
 void scanner_retro_workstation_theme_destroy(void) {
     layer_value = wpm_value = left_value = right_value = channel_value = NULL;
-    for (int i = 0; i < 4; i++) modifier_dot[i] = NULL;
+    for (int i = 0; i < 4; i++) modifier_dot[i] = modifier_icon[i] = NULL;
 }
 
 void scanner_retro_workstation_theme_update(const struct prospector_keyboard_data *data) {
@@ -184,8 +178,7 @@ void scanner_retro_workstation_theme_update(const struct prospector_keyboard_dat
         bool pressed = (data->modifier_flags & masks[i]) != 0;
         lv_obj_set_style_bg_color(modifier_dot[i],
             lv_color_hex(pressed ? INK : FACE), 0);
-        for (uint32_t j = 0; j < lv_obj_get_child_count(modifier_dot[i]); j++)
-            lv_obj_set_style_bg_color(lv_obj_get_child(modifier_dot[i], j),
-                lv_color_hex(pressed ? FACE : INK), 0);
+        lv_obj_set_style_image_recolor(modifier_icon[i],
+            lv_color_hex(pressed ? FACE : INK), 0);
     }
 }

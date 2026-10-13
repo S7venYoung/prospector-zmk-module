@@ -1,4 +1,5 @@
 #include "scanner_weather_theme.h"
+#include "mac_modifier_images.h"
 #include <lvgl.h>
 #include <zephyr/sys/printk.h>
 
@@ -8,6 +9,7 @@ LV_FONT_DECLARE(impact_48);
 #define DARK 0x171A1C
 #define WHITE 0xF7F2DE
 static lv_obj_t *wpm, *lbat, *rbat, *keys[4];
+static lv_obj_t *icons[4];
 
 static lv_obj_t *box(lv_obj_t *p, int x, int y, int w, int h, uint32_t c, int radius) {
     lv_obj_t *o = lv_obj_create(p);
@@ -46,25 +48,19 @@ void scanner_weather_theme_create(lv_obj_t *s) {
     rbat = text(panel, "--", &impact_20, DARK, 170, 25, 74);
     box(panel, 83, 6, 1, 38, 0xA57D25, 0);
     box(panel, 165, 6, 1, 38, 0xA57D25, 0);
-    static const uint16_t glyph[4][9] = {
-        {0x0C6,0x129,0x129,0x1FF,0x044,0x1FF,0x129,0x129,0x0C6},
-        {0x1C0,0x040,0x040,0x020,0x020,0x010,0x010,0x00F,0},
-        {0x010,0x028,0x044,0x082,0x101,0,0,0,0},
-        {0x010,0x028,0x044,0x082,0x1C7,0x044,0x044,0x044,0x07C}
-    };
+    const uint8_t order[4] = {2, 1, 0, 3};
     for (int k = 0; k < 4; k++) {
         keys[k] = box(panel, 8+k*60, 48, 56, 20, DARK, 4);
-        for (int y = 0; y < 9; y++) for (int col = 0; col < 9;) {
-            if (!(glyph[k][y] & (1U << (8-col)))) { col++; continue; }
-            int start = col++;
-            while (col < 9 && (glyph[k][y] & (1U << (8-col)))) col++;
-            box(keys[k], 19+start*2, 1+y*2, (col-start)*2, 2, WHITE, 0);
-        }
+        icons[k] = lv_image_create(keys[k]);
+        lv_image_set_src(icons[k], mac_modifier_images[order[k]]);
+        lv_obj_set_pos(icons[k], 19, 1);
+        lv_obj_set_style_image_recolor(icons[k], lv_color_hex(WHITE), 0);
+        lv_obj_set_style_image_recolor_opa(icons[k], LV_OPA_COVER, 0);
     }
 }
 void scanner_weather_theme_destroy(void) {
     wpm = lbat = rbat = NULL;
-    for (int i = 0; i < 4; i++) keys[i] = NULL;
+    for (int i = 0; i < 4; i++) keys[i] = icons[i] = NULL;
 }
 void scanner_weather_theme_update(const struct prospector_keyboard_data *d) {
     if (!d || !wpm) return;
@@ -76,8 +72,6 @@ void scanner_weather_theme_update(const struct prospector_keyboard_data *d) {
     for (int k = 0; k < 4; k++) {
         bool pressed = (d->modifier_flags & masks[k]) != 0;
         lv_obj_set_style_bg_color(keys[k], lv_color_hex(pressed ? GOLD : DARK), 0);
-        for (uint32_t j = 0; j < lv_obj_get_child_count(keys[k]); j++)
-            lv_obj_set_style_bg_color(lv_obj_get_child(keys[k], j),
-                lv_color_hex(pressed ? DARK : WHITE), 0);
+        lv_obj_set_style_image_recolor(icons[k], lv_color_hex(pressed ? DARK : WHITE), 0);
     }
 }
