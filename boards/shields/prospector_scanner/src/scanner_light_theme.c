@@ -2,6 +2,7 @@
 #include "mac_modifier_images.h"
 #include "system_settings_widget.h"
 #include <zephyr/sys/printk.h>
+LV_FONT_DECLARE(impact_48);
 
 #define BG 0xFAFAFA
 #define INK 0x202124
@@ -77,7 +78,7 @@ void scanner_light_theme_create(lv_obj_t *s) {
     refresh_channel();
 
     text(s, "LAYER", &lv_font_montserrat_12, MUTED, 14, 75, 100, LV_TEXT_ALIGN_LEFT);
-    layer = text(s, "BASE", &lv_font_montserrat_36, INK, 12, 92, 123, LV_TEXT_ALIGN_LEFT);
+    layer = text(s, "BASE", &impact_48, INK, 12, 88, 123, LV_TEXT_ALIGN_LEFT);
     box(s, 137, 79, 1, 53, LINE, 0);
     for (int k = 0; k < 4; k++) {
         keys[k] = box(s, 148+k*28, 94, 25, 31, 0xEEEEEE, 5);
@@ -94,7 +95,7 @@ void scanner_light_theme_create(lv_obj_t *s) {
     text(s, "WPM", &lv_font_montserrat_12, MUTED, 100, 153, 80, LV_TEXT_ALIGN_CENTER);
     text(s, "RIGHT KB", &lv_font_montserrat_12, MUTED, 193, 153, 73, LV_TEXT_ALIGN_CENTER);
     battery(s, 29, 0); battery(s, 209, 1);
-    wpm = text(s, "0", &lv_font_montserrat_36, INK, 99, 171, 82, LV_TEXT_ALIGN_CENTER);
+    wpm = text(s, "0", &impact_48, INK, 99, 164, 82, LV_TEXT_ALIGN_CENTER);
     for (int i = 0; i < 8; i++) {
         history[i] = 0;
         bars[i] = box(s, 111+i*7, 217, 4, 2, 0xCCCCCC, 2);
