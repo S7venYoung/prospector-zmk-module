@@ -6,10 +6,10 @@
 /* Compact LVGL redraw of the supplied 280 x 240 Macintosh reference. */
 LV_FONT_DECLARE(impact_20);
 
-#define PAPER 0xE8DFC9
-#define FACE 0xF5ECDD
+#define PAPER 0xEDECE6
+#define FACE 0xF7F6F0
 #define INK 0x1B1A18
-#define SHADE 0x7F776B
+#define SHADE 0x85847E
 
 static lv_obj_t *layer_value, *wpm_value;
 static lv_obj_t *left_value, *right_value, *dongle_value;
