@@ -6,6 +6,7 @@
 
 #include "system_settings_widget.h"
 #include "display_settings.h"
+#include "scanner_bootloader.h"
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/reboot.h>
 
@@ -61,7 +62,7 @@ static void bootloader_btn_event_cb(lv_event_t *e) {
 
     LOG_INF("🔵 Bootloader button: %s (code=%d)", event_name, code);
 
-    if (code == LV_EVENT_CLICKED || code == LV_EVENT_SHORT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         LOG_INF("🔵🔵🔵 Bootloader button ACTIVATED - entering bootloader mode NOW!");
 
         // Reboot with UF2 bootloader magic value
@@ -70,7 +71,8 @@ static void bootloader_btn_event_cb(lv_event_t *e) {
         // Adafruit bootloader checks for DFU_MAGIC_UF2_RESET = 0x57
         LOG_INF("🔵 Rebooting with magic value 0x57 for UF2 bootloader entry...");
 
-        sys_reboot(0x57);  // Pass magic value directly - Zephyr sets GPREGRET automatically
+        int ret = scanner_enter_bootloader();
+        if (ret < 0) LOG_ERR("Bootloader entry failed: %d", ret);
     }
 }
 

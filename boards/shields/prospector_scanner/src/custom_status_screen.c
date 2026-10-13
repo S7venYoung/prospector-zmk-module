@@ -44,6 +44,7 @@
 #include "scanner_walle_theme.h"
 #include "scanner_retro_workstation_theme.h"
 #include "scanner_light_theme.h"
+#include "scanner_bootloader.h"
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
 LOG_MODULE_REGISTER(display_screen, LOG_LEVEL_INF);
@@ -2013,16 +2014,13 @@ static void ss_bootloader_btn_event_cb(lv_event_t *e) {
         LOG_INF("Bootloader button: RELEASED");
     }
 
-    if (code == LV_EVENT_CLICKED || code == LV_EVENT_SHORT_CLICKED) {
+    if (code == LV_EVENT_CLICKED) {
         LOG_INF("Bootloader button ACTIVATED - entering bootloader mode");
-        /* Use Zephyr 4.x RETENTION_BOOT_MODE API for bootloader entry */
-        int ret = bootmode_set(BOOT_MODE_TYPE_BOOTLOADER);
+        int ret = scanner_enter_bootloader();
         if (ret < 0) {
             LOG_ERR("Failed to set bootloader mode: %d", ret);
             return;
         }
-        LOG_INF("Bootmode set to BOOTLOADER - rebooting...");
-        sys_reboot(SYS_REBOOT_WARM);
     }
 }
 
