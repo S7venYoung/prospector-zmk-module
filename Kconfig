@@ -680,9 +680,6 @@ choice PROSPECTOR_SCANNER_THEME
 config PROSPECTOR_SCANNER_THEME_ORIGINAL
     bool "Original scanner status screen"
 
-config PROSPECTOR_SCANNER_THEME_CODEX
-    bool "Codex status theme"
-
 config PROSPECTOR_SCANNER_THEME_CODEX2
     bool "Codex2 quota dashboard (5-hour + 7-day)"
 

@@ -38,7 +38,6 @@
 #include "prospector_layouts.h"  /* Carrefinho-inspired display layouts */
 #include "scanner_theme.h"        /* normalized state for all display themes */
 #include "scanner_idle_theme.h"   /* radar standby screen before a keyboard is found */
-#include "scanner_codex_theme.h"  /* scanner-native Codex renderer */
 #include "scanner_codex2_theme.h" /* 5-hour + 7-day Codex dashboard */
 #include "scanner_host_status.h"
 #include "scanner_walle_theme.h"
@@ -75,7 +74,6 @@ static lv_obj_t *screen_obj = NULL;
  * display thread, so no locking is required around LVGL objects. */
 enum scanner_status_theme {
     SCANNER_STATUS_THEME_ORIGINAL = 0,
-    SCANNER_STATUS_THEME_CODEX,
     SCANNER_STATUS_THEME_CODEX2,
     SCANNER_STATUS_THEME_WALLE,
     SCANNER_STATUS_THEME_RETRO_WORKSTATION,
@@ -86,9 +84,7 @@ enum scanner_status_theme {
 };
 
 static enum scanner_status_theme active_status_theme =
-#if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX)
-    SCANNER_STATUS_THEME_CODEX;
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
+#if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
     SCANNER_STATUS_THEME_CODEX2;
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
     SCANNER_STATUS_THEME_WALLE;
@@ -577,9 +573,7 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
     }
 
     if (current_screen == SCREEN_PROSPECTOR_DISPLAY && scanner_host_status_take_changed()) {
-        if (active_status_theme == SCANNER_STATUS_THEME_CODEX) {
-            scanner_codex_theme_host_update(scanner_host_status_get());
-        } else if (active_status_theme == SCANNER_STATUS_THEME_CODEX2) {
+        if (active_status_theme == SCANNER_STATUS_THEME_CODEX2) {
             scanner_codex2_theme_host_update(scanner_host_status_get());
         }
     }
@@ -642,9 +636,6 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             kb_data.current_layer_name[4] = '\0';
             prospector_scanner_theme_update(&kb_data);
             switch (active_status_theme) {
-            case SCANNER_STATUS_THEME_CODEX:
-                scanner_codex_theme_update(&kb_data);
-                break;
             case SCANNER_STATUS_THEME_CODEX2:
                 scanner_codex2_theme_update(&kb_data);
                 break;
@@ -3008,7 +2999,6 @@ static void create_keyboard_select_widgets(void) {
 static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
     switch (active_status_theme) {
-    case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_destroy(); break;
     case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_destroy(); break;
     case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_destroy(); break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_destroy(); break;
@@ -3026,9 +3016,6 @@ static void create_prospector_display_widgets(void) {
     lv_obj_set_style_bg_color(screen_obj, lv_color_black(), 0);
 
     switch (active_status_theme) {
-    case SCANNER_STATUS_THEME_CODEX:
-        scanner_codex_theme_create(screen_obj);
-        break;
     case SCANNER_STATUS_THEME_CODEX2:
         scanner_codex2_theme_create(screen_obj);
         break;
@@ -3058,7 +3045,6 @@ static void create_prospector_display_widgets(void) {
     const struct prospector_keyboard_data *cached = prospector_scanner_theme_state();
     if (cached && cached->has_dynamic_data) {
         switch (active_status_theme) {
-        case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_update(cached); break;
         case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_update(cached); break;
         case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_update(cached); break;
         case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_update(cached); break;
