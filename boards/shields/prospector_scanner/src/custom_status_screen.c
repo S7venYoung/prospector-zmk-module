@@ -42,7 +42,6 @@
 #include "scanner_codex2_theme.h" /* 5-hour + 7-day Codex dashboard */
 #include "scanner_host_status.h"
 #include "scanner_walle_theme.h"
-#include "scanner_weather_theme.h"
 #include "scanner_retro_workstation_theme.h"
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
@@ -77,7 +76,6 @@ enum scanner_status_theme {
     SCANNER_STATUS_THEME_CODEX,
     SCANNER_STATUS_THEME_CODEX2,
     SCANNER_STATUS_THEME_WALLE,
-    SCANNER_STATUS_THEME_WEATHER,
     SCANNER_STATUS_THEME_RETRO_WORKSTATION,
     SCANNER_STATUS_THEME_FIELD,
     SCANNER_STATUS_THEME_RADII,
@@ -91,8 +89,6 @@ static enum scanner_status_theme active_status_theme =
     SCANNER_STATUS_THEME_CODEX2;
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
     SCANNER_STATUS_THEME_WALLE;
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WEATHER)
-    SCANNER_STATUS_THEME_WEATHER;
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_RETRO_WORKSTATION)
     SCANNER_STATUS_THEME_RETRO_WORKSTATION;
 #else
@@ -651,9 +647,6 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
                 break;
             case SCANNER_STATUS_THEME_WALLE:
                 scanner_walle_theme_update(&kb_data);
-                break;
-            case SCANNER_STATUS_THEME_WEATHER:
-                scanner_weather_theme_update(&kb_data);
                 break;
             case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
                 scanner_retro_workstation_theme_update(&kb_data);
@@ -3015,7 +3008,6 @@ static void destroy_prospector_display_widgets(void) {
     case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_destroy(); break;
     case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_destroy(); break;
     case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_destroy(); break;
-    case SCANNER_STATUS_THEME_WEATHER: scanner_weather_theme_destroy(); break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_destroy(); break;
     case SCANNER_STATUS_THEME_ORIGINAL:
     default: prospector_layouts_destroy(); break;
@@ -3038,9 +3030,6 @@ static void create_prospector_display_widgets(void) {
         break;
     case SCANNER_STATUS_THEME_WALLE:
         scanner_walle_theme_create(screen_obj);
-        break;
-    case SCANNER_STATUS_THEME_WEATHER:
-        scanner_weather_theme_create(screen_obj);
         break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
         scanner_retro_workstation_theme_create(screen_obj);
@@ -3065,7 +3054,6 @@ static void create_prospector_display_widgets(void) {
         case SCANNER_STATUS_THEME_CODEX: scanner_codex_theme_update(cached); break;
         case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_update(cached); break;
         case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_update(cached); break;
-        case SCANNER_STATUS_THEME_WEATHER: scanner_weather_theme_update(cached); break;
         case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_update(cached); break;
         case SCANNER_STATUS_THEME_ORIGINAL:
         default: prospector_layouts_update(cached); break;
