@@ -604,13 +604,9 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             last_keyboard_name[0] = '\0';
             active_battery_count = -1;
 
-            /* Apply timeout brightness if configured */
-#ifdef CONFIG_PROSPECTOR_SCANNER_TIMEOUT_BRIGHTNESS
-            if (CONFIG_PROSPECTOR_SCANNER_TIMEOUT_BRIGHTNESS > 0) {
-                set_pwm_brightness(CONFIG_PROSPECTOR_SCANNER_TIMEOUT_BRIGHTNESS);
-                LOG_INF("Timeout brightness set to %d%%", CONFIG_PROSPECTOR_SCANNER_TIMEOUT_BRIGHTNESS);
-            }
-#endif
+            /* Keyboard discovery must not override the user's brightness.
+             * Otherwise timeout events and the ALS timer alternate PWM levels
+             * indefinitely while no keyboard is advertising. */
             return;
         }
 
@@ -622,11 +618,7 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             last_keyboard_name[MAX_NAME_LEN - 1] = '\0';
             active_battery_count = -1;  /* Force reposition on next battery update */
 
-            /* Restore normal brightness when keyboard activity resumes */
-#ifdef CONFIG_PROSPECTOR_FIXED_BRIGHTNESS
-            set_pwm_brightness(CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
-            LOG_INF("Brightness restored to %d%%", CONFIG_PROSPECTOR_FIXED_BRIGHTNESS);
-#endif
+            /* Retain manual/ALS brightness when keyboard activity resumes. */
         }
 
         if (current_screen == SCREEN_PROSPECTOR_DISPLAY) {
@@ -2100,6 +2092,14 @@ static void auto_brightness_timer_cb(lv_timer_t *timer) {
 
     /* Map light value to brightness percentage */
     uint8_t target_brightness = brightness_control_map_light_to_brightness(light_val);
+
+    /* Sensor noise should not continuously restart PWM at adjacent levels. */
+    if (last_applied_brightness >= 0) {
+        int difference = (int)target_brightness - last_applied_brightness;
+        if (difference > -3 && difference < 3) {
+            return;
+        }
+    }
 
     /* Apply brightness (PWM) */
     set_pwm_brightness(target_brightness);
