@@ -14,6 +14,9 @@ endif()
 # status_scanner.c = BLE receive layer, scanner_core.c = keyboard state.
 # Both are shield-agnostic and shared by every scanner shield.
 if(CONFIG_PROSPECTOR_MODE_SCANNER)
+        if(CONFIG_ZMK_STUDIO)
+                include(${CMAKE_CURRENT_LIST_DIR}/cmake/scanner_studio.cmake)
+        endif()
         target_sources(app PRIVATE src/status_scanner.c)
         target_sources(app PRIVATE src/scanner_core.c)
 
