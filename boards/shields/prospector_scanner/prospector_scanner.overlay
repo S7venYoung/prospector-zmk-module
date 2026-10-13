@@ -4,13 +4,30 @@
  */
 
 #include <dt-bindings/zmk/matrix_transform.h>
+#include <physical_layouts.dtsi>
 
 / {
     chosen {
         zmk,kscan = &kscan0;
+        zmk,physical-layout = &scanner_management_layout;
         zmk,display = &st7789v;
         zephyr,display = &st7789v;
         zephyr,console = &cdc_acm_uart;
+    };
+
+    scanner_management_transform: scanner_management_transform {
+        compatible = "zmk,matrix-transform";
+        rows = <1>;
+        columns = <1>;
+        map = <RC(0, 0)>;
+    };
+
+    scanner_management_layout: scanner_management_layout {
+        compatible = "zmk,physical-layout";
+        display-name = "Scanner management";
+        transform = <&scanner_management_transform>;
+        kscan = <&kscan0>;
+        keys = <&key_physical_attrs 100 100 0 0 0 0 0>;
     };
 
     /* Dummy kscan - moved to D2 to free D0 for touch IRQ */
