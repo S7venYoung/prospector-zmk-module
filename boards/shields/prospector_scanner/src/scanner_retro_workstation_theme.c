@@ -1,10 +1,12 @@
 #include "scanner_retro_workstation_theme.h"
+#include "system_settings_widget.h"
 
 #include <lvgl.h>
 #include <zephyr/sys/printk.h>
 
 /* Compact LVGL redraw of the supplied 280 x 240 Macintosh reference. */
 LV_FONT_DECLARE(impact_20);
+LV_FONT_DECLARE(impact_48);
 
 #define PAPER 0xEDECE6
 #define FACE 0xF7F6F0
@@ -12,7 +14,7 @@ LV_FONT_DECLARE(impact_20);
 #define SHADE 0x85847E
 
 static lv_obj_t *layer_value, *wpm_value;
-static lv_obj_t *left_value, *right_value, *dongle_value;
+static lv_obj_t *left_value, *right_value, *channel_value;
 static lv_obj_t *modifier_dot[4];
 
 static void plain(lv_obj_t *obj, uint32_t color) {
@@ -66,17 +68,27 @@ static void battery_icon(lv_obj_t *parent, int x, int y, int cells) {
 }
 
 static void side_card(lv_obj_t *screen, int x, const char *title, lv_obj_t **value) {
-    lv_obj_t *card = raised(screen, x, 40, 61, 78);
+    lv_obj_t *card = raised(screen, x, 24, 61, 78);
     label(card, title, &lv_font_unscii_8, 4, 7, 53, LV_TEXT_ALIGN_CENTER);
     rule(card, 5, 21, 51);
     battery_icon(card, 10, 29, 3);
-    *value = label(card, "--%", &impact_20, 3, 50, 55, LV_TEXT_ALIGN_CENTER);
+    *value = label(card, "--", &impact_20, 3, 50, 55, LV_TEXT_ALIGN_CENTER);
 }
 
 static void modifier(lv_obj_t *screen, int x, const char *name, int slot) {
-    lv_obj_t *key = raised(screen, x, 127, 34, 28);
-    label(key, name, &lv_font_unscii_8, 1, 5, 32, LV_TEXT_ALIGN_CENTER);
-    modifier_dot[slot] = box(key, 11, 18, 8, 7, PAPER, INK, 1);
+    (void)name;
+    /* Pixel paths for Control, Option, Command and Shift, independent of fonts. */
+    static const uint16_t pixels[4][9] = {
+        {0x010,0x028,0x044,0x082,0x101,0,0,0,0},
+        {0x1C0,0x040,0x040,0x020,0x020,0x010,0x010,0x00F,0},
+        {0x0C6,0x129,0x129,0x07C,0x044,0x07C,0x129,0x129,0x0C6},
+        {0x010,0x028,0x044,0x082,0x1C7,0x044,0x044,0x044,0x07C}
+    };
+    lv_obj_t *key = raised(screen, x, 111, 34, 28);
+    modifier_dot[slot] = key;
+    for (int y = 0; y < 9; y++) for (int col = 0; col < 9; col++)
+        if (pixels[slot][y] & (1U << (8-col)))
+            box(key, 8+col*2, 5+y*2, 2, 2, INK, INK, 0);
 }
 
 void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
@@ -85,47 +97,48 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
 
     /* The 280x240 panel is visibly masked by a round bezel.  Keep all
      * content inside a 10px horizontal and 7px vertical safe inset. */
-    label(screen, "[+]", &lv_font_unscii_8, 14, 10, 30, LV_TEXT_ALIGN_CENTER);
-    label(screen, "ZMK Dongle", &lv_font_unscii_8, 47, 12, 126, LV_TEXT_ALIGN_LEFT);
-    label(screen, "USB", &impact_20, 218, 9, 44, LV_TEXT_ALIGN_CENTER);
-    rule(screen, 10, 30, 260);
 
     side_card(screen, 12, "L KB", &left_value);
     side_card(screen, 207, "R KB", &right_value);
 
-    lv_obj_t *layer = raised(screen, 79, 38, 122, 80);
-    box(layer, 6, 6, 13, 11, FACE, INK, 2);
-    rule(layer, 30, 7, 82); rule(layer, 30, 13, 82); rule(layer, 30, 19, 82);
-    rule(layer, 5, 26, 112);
-    label(layer, "LAYER", &lv_font_unscii_8, 18, 32, 86, LV_TEXT_ALIGN_CENTER);
+    lv_obj_t *layer = raised(screen, 79, 18, 122, 84);
+    box(layer, 6, 5, 10, 8, FACE, INK, 1);
+    rule(layer, 24, 5, 88); rule(layer, 24, 10, 88);
+    rule(layer, 5, 17, 112);
+    label(layer, "LAYER", &lv_font_unscii_8, 18, 21, 86, LV_TEXT_ALIGN_CENTER);
     /* Keep the layer name within its own row; the former 48px font overran
      * both the label above and the modifier row on the real round display. */
-    layer_value = label(layer, "BASE", &impact_20, 6, 46, 110, LV_TEXT_ALIGN_CENTER);
+    layer_value = label(layer, "BASE", &impact_48, 6, 31, 110, LV_TEXT_ALIGN_CENTER);
 
     modifier(screen, 72, "Ctrl", 0); modifier(screen, 108, "Alt", 1);
     modifier(screen, 144, "Gui", 2); modifier(screen, 180, "Sft", 3);
 
-    lv_obj_t *dongle = raised(screen, 12, 164, 96, 47);
-    label(dongle, "Dongle", &lv_font_unscii_8, 7, 5, 80, LV_TEXT_ALIGN_CENTER);
-    rule(dongle, 6, 23, 83); battery_icon(dongle, 8, 28, 2);
-    dongle_value = label(dongle, "--%", &impact_20, 51, 27, 40, LV_TEXT_ALIGN_CENTER);
+    lv_obj_t *dongle = raised(screen, 12, 148, 96, 47);
+    label(dongle, "BLE CH", &lv_font_unscii_8, 7, 5, 80, LV_TEXT_ALIGN_CENTER);
+    rule(dongle, 6, 19, 83);
+    channel_value = label(dongle, "ALL", &impact_20, 6, 22, 83, LV_TEXT_ALIGN_CENTER);
+    char channel[8];
+    uint8_t selected = scanner_get_runtime_channel();
+    if (selected) snprintk(channel, sizeof(channel), "%u", selected);
+    else snprintk(channel, sizeof(channel), "ALL");
+    lv_label_set_text(channel_value, channel);
 
-    lv_obj_t *mac = raised(screen, 119, 166, 39, 42);
+    lv_obj_t *mac = raised(screen, 119, 150, 39, 42);
     label(mac, "[: ]", &lv_font_unscii_8, 2, 14, 35, LV_TEXT_ALIGN_CENTER);
 
-    lv_obj_t *wpm = raised(screen, 173, 164, 95, 47);
+    lv_obj_t *wpm = raised(screen, 173, 148, 95, 47);
     label(wpm, "WPM", &lv_font_unscii_8, 7, 5, 39, LV_TEXT_ALIGN_LEFT);
     rule(wpm, 5, 23, 85);
     label(wpm, "|||", &lv_font_unscii_8, 7, 29, 25, LV_TEXT_ALIGN_LEFT);
     wpm_value = label(wpm, "0", &impact_20, 45, 24, 44, LV_TEXT_ALIGN_CENTER);
 
-    rule(screen, 10, 217, 260);
-    label(screen, "Type Happy.", &lv_font_unscii_8, 15, 222, 110, LV_TEXT_ALIGN_LEFT);
-    label(screen, "13:37", &lv_font_unscii_8, 217, 222, 48, LV_TEXT_ALIGN_RIGHT);
+    rule(screen, 10, 201, 260);
+    label(screen, "Type Happy.", &lv_font_unscii_8, 15, 206, 110, LV_TEXT_ALIGN_LEFT);
+    label(screen, "13:37", &lv_font_unscii_8, 217, 206, 48, LV_TEXT_ALIGN_RIGHT);
 }
 
 void scanner_retro_workstation_theme_destroy(void) {
-    layer_value = wpm_value = left_value = right_value = dongle_value = NULL;
+    layer_value = wpm_value = left_value = right_value = channel_value = NULL;
     for (int i = 0; i < 4; i++) modifier_dot[i] = NULL;
 }
 
@@ -134,11 +147,20 @@ void scanner_retro_workstation_theme_update(const struct prospector_keyboard_dat
     char value[8];
     lv_label_set_text(layer_value, data->current_layer_name[0] ? data->current_layer_name : "BASE");
     snprintk(value, sizeof(value), "%u", data->wpm_value); lv_label_set_text(wpm_value, value);
-    snprintk(value, sizeof(value), "%u%%", data->battery_level);
-    lv_label_set_text(left_value, value); lv_label_set_text(dongle_value, value);
-    snprintk(value, sizeof(value), "%u%%", data->peripheral_battery[0]); lv_label_set_text(right_value, value);
+    snprintk(value, sizeof(value), "%u", data->battery_level);
+    lv_label_set_text(left_value, value);
+    snprintk(value, sizeof(value), "%u", data->peripheral_battery[0]); lv_label_set_text(right_value, value);
+    uint8_t selected = scanner_get_runtime_channel();
+    if (selected) snprintk(value, sizeof(value), "%u", selected);
+    else snprintk(value, sizeof(value), "ALL");
+    lv_label_set_text(channel_value, value);
     const uint8_t masks[4] = {0x11, 0x44, 0x88, 0x22};
-    for (int i = 0; i < 4; i++) if (modifier_dot[i])
+    for (int i = 0; i < 4; i++) if (modifier_dot[i]) {
+        bool pressed = (data->modifier_flags & masks[i]) != 0;
         lv_obj_set_style_bg_color(modifier_dot[i],
-            lv_color_hex((data->modifier_flags & masks[i]) ? INK : PAPER), 0);
+            lv_color_hex(pressed ? INK : FACE), 0);
+        for (uint32_t j = 0; j < lv_obj_get_child_count(modifier_dot[i]); j++)
+            lv_obj_set_style_bg_color(lv_obj_get_child(modifier_dot[i], j),
+                lv_color_hex(pressed ? FACE : INK), 0);
+    }
 }

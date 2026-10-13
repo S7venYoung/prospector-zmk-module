@@ -79,6 +79,8 @@ enum scanner_status_theme {
     SCANNER_STATUS_THEME_WALLE,
     SCANNER_STATUS_THEME_WEATHER,
     SCANNER_STATUS_THEME_RETRO_WORKSTATION,
+    SCANNER_STATUS_THEME_FIELD,
+    SCANNER_STATUS_THEME_RADII,
     SCANNER_STATUS_THEME_COUNT,
 };
 
@@ -3276,7 +3278,10 @@ static void create_prospector_display_widgets(void) {
     case SCANNER_STATUS_THEME_ORIGINAL:
     default: {
         prospector_layouts_init(screen_obj);
-        uint8_t saved_layout = display_settings_get_layout();
+        uint8_t saved_layout = active_status_theme == SCANNER_STATUS_THEME_FIELD
+            ? PROSPECTOR_LAYOUT_FIELD
+            : active_status_theme == SCANNER_STATUS_THEME_RADII
+                ? PROSPECTOR_LAYOUT_RADII : PROSPECTOR_LAYOUT_OPERATOR;
         if (saved_layout != (uint8_t)prospector_layouts_get_style()) {
             prospector_layouts_set_style((prospector_layout_t)saved_layout);
         }
