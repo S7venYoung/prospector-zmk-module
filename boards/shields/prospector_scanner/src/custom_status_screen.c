@@ -43,6 +43,7 @@
 #include "scanner_host_status.h"
 #include "scanner_walle_theme.h"
 #include "scanner_retro_workstation_theme.h"
+#include "scanner_light_theme.h"
 #include "fault_recovery.h"      /* Crash recovery + display watchdog feed */
 
 LOG_MODULE_REGISTER(display_screen, LOG_LEVEL_INF);
@@ -79,6 +80,7 @@ enum scanner_status_theme {
     SCANNER_STATUS_THEME_RETRO_WORKSTATION,
     SCANNER_STATUS_THEME_FIELD,
     SCANNER_STATUS_THEME_RADII,
+    SCANNER_STATUS_THEME_LIGHT,
     SCANNER_STATUS_THEME_COUNT,
 };
 
@@ -650,6 +652,9 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
                 break;
             case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
                 scanner_retro_workstation_theme_update(&kb_data);
+                break;
+            case SCANNER_STATUS_THEME_LIGHT:
+                scanner_light_theme_update(&kb_data);
                 break;
             case SCANNER_STATUS_THEME_ORIGINAL:
             default:
@@ -3009,6 +3014,7 @@ static void destroy_prospector_display_widgets(void) {
     case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_destroy(); break;
     case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_destroy(); break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_destroy(); break;
+    case SCANNER_STATUS_THEME_LIGHT: scanner_light_theme_destroy(); break;
     case SCANNER_STATUS_THEME_ORIGINAL:
     default: prospector_layouts_destroy(); break;
     }
@@ -3034,6 +3040,9 @@ static void create_prospector_display_widgets(void) {
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
         scanner_retro_workstation_theme_create(screen_obj);
         break;
+    case SCANNER_STATUS_THEME_LIGHT:
+        scanner_light_theme_create(screen_obj);
+        break;
     case SCANNER_STATUS_THEME_ORIGINAL:
     default: {
         prospector_layouts_init(screen_obj);
@@ -3055,6 +3064,7 @@ static void create_prospector_display_widgets(void) {
         case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_update(cached); break;
         case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_update(cached); break;
         case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_update(cached); break;
+        case SCANNER_STATUS_THEME_LIGHT: scanner_light_theme_update(cached); break;
         case SCANNER_STATUS_THEME_ORIGINAL:
         default: prospector_layouts_update(cached); break;
         }
