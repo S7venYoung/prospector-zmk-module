@@ -81,14 +81,40 @@ static void modifier(lv_obj_t *screen, int x, const char *name, int slot) {
     static const uint16_t pixels[4][9] = {
         {0x010,0x028,0x044,0x082,0x101,0,0,0,0},
         {0x1C0,0x040,0x040,0x020,0x020,0x010,0x010,0x00F,0},
-        {0x0C6,0x129,0x129,0x07C,0x044,0x07C,0x129,0x129,0x0C6},
+        {0x0C6,0x129,0x129,0x1FF,0x044,0x1FF,0x129,0x129,0x0C6},
         {0x010,0x028,0x044,0x082,0x1C7,0x044,0x044,0x044,0x07C}
     };
     lv_obj_t *key = raised(screen, x, 111, 34, 28);
     modifier_dot[slot] = key;
-    for (int y = 0; y < 9; y++) for (int col = 0; col < 9; col++)
-        if (pixels[slot][y] & (1U << (8-col)))
-            box(key, 8+col*2, 5+y*2, 2, 2, INK, INK, 0);
+    for (int y = 0; y < 9; y++) for (int col = 0; col < 9;) {
+        if (!(pixels[slot][y] & (1U << (8-col)))) { col++; continue; }
+        int start = col++;
+        while (col < 9 && (pixels[slot][y] & (1U << (8-col)))) col++;
+        box(key, 8+start*2, 5+y*2, (col-start)*2, 2, INK, INK, 0);
+    }
+}
+
+static void macintosh(lv_obj_t *screen) {
+    /* Compact Macintosh silhouette: bezel, Happy Mac, floppy slot and foot. */
+    lv_obj_t *mac = raised(screen, 119, 149, 39, 44);
+    box(mac, 3, 3, 33, 31, PAPER, SHADE, 1);
+    box(mac, 6, 6, 27, 24, FACE, INK, 2);
+    box(mac, 11, 11, 2, 4, INK, INK, 0);
+    box(mac, 26, 11, 2, 4, INK, INK, 0);
+    box(mac, 19, 11, 2, 9, INK, INK, 0);
+    box(mac, 16, 18, 5, 2, INK, INK, 0);
+    box(mac, 12, 22, 2, 2, INK, INK, 0);
+    box(mac, 25, 22, 2, 2, INK, INK, 0);
+    box(mac, 14, 24, 11, 2, INK, INK, 0);
+    box(mac, 7, 35, 3, 2, INK, INK, 0);
+    box(mac, 21, 35, 11, 2, INK, INK, 0);
+    box(mac, 5, 40, 29, 3, SHADE, INK, 1);
+    for (int side = 0; side < 2; side++) {
+        int x = side ? 162 : 111;
+        box(screen, x, 168, 4, 2, INK, INK, 0);
+        box(screen, x + (side ? 2 : -2), 156, 2, 3, INK, INK, 0);
+        box(screen, x + (side ? 2 : -2), 180, 2, 3, INK, INK, 0);
+    }
 }
 
 void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
@@ -123,8 +149,7 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
     else snprintk(channel, sizeof(channel), "ALL");
     lv_label_set_text(channel_value, channel);
 
-    lv_obj_t *mac = raised(screen, 119, 150, 39, 42);
-    label(mac, "[: ]", &lv_font_unscii_8, 2, 14, 35, LV_TEXT_ALIGN_CENTER);
+    macintosh(screen);
 
     lv_obj_t *wpm = raised(screen, 173, 148, 95, 47);
     label(wpm, "WPM", &lv_font_unscii_8, 7, 5, 39, LV_TEXT_ALIGN_LEFT);
