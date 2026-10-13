@@ -5,7 +5,6 @@
 
 /* Compact LVGL redraw of the supplied 280 x 240 Macintosh reference. */
 LV_FONT_DECLARE(impact_20);
-LV_FONT_DECLARE(impact_48);
 
 #define PAPER 0xE8DFC9
 #define FACE 0xF5ECDD
@@ -67,17 +66,17 @@ static void battery_icon(lv_obj_t *parent, int x, int y, int cells) {
 }
 
 static void side_card(lv_obj_t *screen, int x, const char *title, lv_obj_t **value) {
-    lv_obj_t *card = raised(screen, x, 40, 61, 91);
-    label(card, title, &lv_font_unscii_8, 4, 10, 53, LV_TEXT_ALIGN_CENTER);
-    rule(card, 5, 28, 51);
-    battery_icon(card, 10, 39, 3);
-    *value = label(card, "--%", &impact_20, 3, 61, 55, LV_TEXT_ALIGN_CENTER);
+    lv_obj_t *card = raised(screen, x, 40, 61, 78);
+    label(card, title, &lv_font_unscii_8, 4, 7, 53, LV_TEXT_ALIGN_CENTER);
+    rule(card, 5, 21, 51);
+    battery_icon(card, 10, 29, 3);
+    *value = label(card, "--%", &impact_20, 3, 50, 55, LV_TEXT_ALIGN_CENTER);
 }
 
 static void modifier(lv_obj_t *screen, int x, const char *name, int slot) {
-    lv_obj_t *key = raised(screen, x, 124, 34, 31);
+    lv_obj_t *key = raised(screen, x, 127, 34, 28);
     label(key, name, &lv_font_unscii_8, 1, 5, 32, LV_TEXT_ALIGN_CENTER);
-    modifier_dot[slot] = box(key, 11, 19, 8, 8, PAPER, INK, 1);
+    modifier_dot[slot] = box(key, 11, 18, 8, 7, PAPER, INK, 1);
 }
 
 void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
@@ -94,33 +93,35 @@ void scanner_retro_workstation_theme_create(lv_obj_t *screen) {
     side_card(screen, 12, "L KB", &left_value);
     side_card(screen, 207, "R KB", &right_value);
 
-    lv_obj_t *layer = raised(screen, 79, 35, 122, 84);
-    box(layer, 6, 7, 13, 11, FACE, INK, 2);
-    rule(layer, 30, 8, 82); rule(layer, 30, 14, 82); rule(layer, 30, 20, 82);
-    rule(layer, 5, 28, 112);
-    label(layer, "LAYER", &lv_font_unscii_8, 18, 34, 86, LV_TEXT_ALIGN_CENTER);
-    layer_value = label(layer, "BASE", &impact_48, 6, 35, 110, LV_TEXT_ALIGN_CENTER);
+    lv_obj_t *layer = raised(screen, 79, 38, 122, 80);
+    box(layer, 6, 6, 13, 11, FACE, INK, 2);
+    rule(layer, 30, 7, 82); rule(layer, 30, 13, 82); rule(layer, 30, 19, 82);
+    rule(layer, 5, 26, 112);
+    label(layer, "LAYER", &lv_font_unscii_8, 18, 32, 86, LV_TEXT_ALIGN_CENTER);
+    /* Keep the layer name within its own row; the former 48px font overran
+     * both the label above and the modifier row on the real round display. */
+    layer_value = label(layer, "BASE", &impact_20, 6, 46, 110, LV_TEXT_ALIGN_CENTER);
 
     modifier(screen, 72, "Ctrl", 0); modifier(screen, 108, "Alt", 1);
     modifier(screen, 144, "Gui", 2); modifier(screen, 180, "Sft", 3);
 
-    lv_obj_t *dongle = raised(screen, 12, 162, 96, 49);
+    lv_obj_t *dongle = raised(screen, 12, 164, 96, 47);
     label(dongle, "Dongle", &lv_font_unscii_8, 7, 5, 80, LV_TEXT_ALIGN_CENTER);
     rule(dongle, 6, 23, 83); battery_icon(dongle, 8, 28, 2);
     dongle_value = label(dongle, "--%", &impact_20, 51, 27, 40, LV_TEXT_ALIGN_CENTER);
 
-    lv_obj_t *mac = raised(screen, 119, 166, 39, 44);
+    lv_obj_t *mac = raised(screen, 119, 166, 39, 42);
     label(mac, "[: ]", &lv_font_unscii_8, 2, 14, 35, LV_TEXT_ALIGN_CENTER);
 
-    lv_obj_t *wpm = raised(screen, 173, 162, 95, 49);
+    lv_obj_t *wpm = raised(screen, 173, 164, 95, 47);
     label(wpm, "WPM", &lv_font_unscii_8, 7, 5, 39, LV_TEXT_ALIGN_LEFT);
     rule(wpm, 5, 23, 85);
     label(wpm, "|||", &lv_font_unscii_8, 7, 29, 25, LV_TEXT_ALIGN_LEFT);
     wpm_value = label(wpm, "0", &impact_20, 45, 24, 44, LV_TEXT_ALIGN_CENTER);
 
-    rule(screen, 10, 216, 260);
-    label(screen, "Type Happy.", &lv_font_unscii_8, 15, 221, 110, LV_TEXT_ALIGN_LEFT);
-    label(screen, "13:37", &lv_font_unscii_8, 217, 221, 48, LV_TEXT_ALIGN_RIGHT);
+    rule(screen, 10, 217, 260);
+    label(screen, "Type Happy.", &lv_font_unscii_8, 15, 222, 110, LV_TEXT_ALIGN_LEFT);
+    label(screen, "13:37", &lv_font_unscii_8, 217, 222, 48, LV_TEXT_ALIGN_RIGHT);
 }
 
 void scanner_retro_workstation_theme_destroy(void) {
