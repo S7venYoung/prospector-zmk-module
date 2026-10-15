@@ -15,8 +15,10 @@
 LOG_MODULE_REGISTER(backlight_init, LOG_LEVEL_INF);
 
 /* Backlight PWM LED node */
-#if DT_HAS_COMPAT_STATUS_OKAY(pwm_leds)
-#define BACKLIGHT_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(pwm_leds)
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(backlight), okay)
+#define BACKLIGHT_NODE DT_PARENT(DT_NODELABEL(backlight))
+/* Skip the inherited XIAO PWM LED; address the LCD backlight explicitly. */
+#define BACKLIGHT_INDEX DT_NODE_CHILD_IDX(DT_NODELABEL(backlight))
 static const struct device *backlight_dev = DEVICE_DT_GET(BACKLIGHT_NODE);
 #define HAS_PWM_BACKLIGHT 1
 #else
@@ -52,7 +54,7 @@ static int backlight_init(void) {
      * display thread. Previously boot used the opposite polarity, then the
      * display thread corrected it, producing a visible brightness jump. */
     uint8_t pwm_duty = 100 - DEFAULT_BRIGHTNESS;
-    ret = led_set_brightness(backlight_dev, 0, pwm_duty);
+    ret = led_set_brightness(backlight_dev, BACKLIGHT_INDEX, pwm_duty);
     if (ret < 0) {
         LOG_ERR("Failed to set backlight brightness: %d", ret);
         return ret;
