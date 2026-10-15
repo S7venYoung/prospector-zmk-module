@@ -169,6 +169,23 @@ static void set_battery(lv_obj_t *value, lv_obj_t *fill, lv_obj_t *dot, uint8_t 
     lv_obj_set_style_bg_color(fill, lv_color_hex(level < 20 ? RED : GREEN), 0);
     lv_obj_set_style_bg_color(dot, lv_color_hex(level ? GREEN : RED), 0);
 }
+/* Keep large totals on one line; 98.5M is wider than this card at 48px. */
+static void update_token_text(const char *value) {
+    const lv_font_t *fonts[] = { &impact_48, &lv_font_montserrat_36, &lv_font_montserrat_28,
+                                &impact_20 };
+    lv_label_set_long_mode(host_tokens, LV_LABEL_LONG_CLIP);
+    lv_label_set_text(host_tokens, value);
+    for (size_t i = 0; i < ARRAY_SIZE(fonts); ++i) {
+        lv_obj_set_style_text_font(host_tokens, fonts[i], 0);
+        lv_obj_set_width(host_tokens, LV_SIZE_CONTENT);
+        lv_obj_update_layout(host_tokens);
+        if (lv_obj_get_width(host_tokens) <= 114 || i + 1 == ARRAY_SIZE(fonts)) {
+            lv_obj_set_width(host_tokens, 114);
+            lv_obj_set_pos(host_tokens, 4, 40 + (64 - fonts[i]->line_height) / 2);
+            break;
+        }
+    }
+}
 void scanner_codex2_theme_host_update(const struct scanner_host_status *status) {
     if (!status || !host_left || !host_tokens || !host_week || !status->codex_available) return;
     char left[8], tokens[16];
@@ -183,7 +200,7 @@ void scanner_codex2_theme_host_update(const struct scanner_host_status *status) 
                  (status->codex_total_tokens % 1000U) / 100U);
     else snprintk(tokens, sizeof(tokens), "%u", status->codex_total_tokens);
     lv_label_set_text(host_left, left);
-    lv_label_set_text(host_tokens, tokens);
+    update_token_text(tokens);
     if (status->codex_week_available) {
         char week[8];
         snprintk(week, sizeof(week), "%u%%", status->codex_week_left_percent);
