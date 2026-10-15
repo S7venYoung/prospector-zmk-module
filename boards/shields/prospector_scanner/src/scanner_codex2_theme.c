@@ -171,8 +171,7 @@ static void set_battery(lv_obj_t *value, lv_obj_t *fill, lv_obj_t *dot, uint8_t 
 }
 /* Keep large totals on one line; 98.5M is wider than this card at 48px. */
 static void update_token_text(const char *value) {
-    const lv_font_t *fonts[] = { &impact_48, &lv_font_montserrat_36, &lv_font_montserrat_28,
-                                &impact_20 };
+    const lv_font_t *fonts[] = { &impact_48, &impact_20 };
     lv_label_set_long_mode(host_tokens, LV_LABEL_LONG_CLIP);
     lv_label_set_text(host_tokens, value);
     for (size_t i = 0; i < ARRAY_SIZE(fonts); ++i) {
