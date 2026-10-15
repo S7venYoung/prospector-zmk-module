@@ -1007,7 +1007,8 @@ static void adv_work_handler(struct k_work *work) {
                 err = bt_le_adv_update_data(prospector_ad, ARRAY_SIZE(prospector_ad),
                                             NULL, 0);
             }
-            if (err == -EAGAIN) {
+            if (err == -EAGAIN || err == -EINVAL) {
+                // Legacy ADV may have stopped or been deleted by Zephyr.
                 // ADV stopped externally (PC connected through proxy, or ZMK took over)
                 prospector_adv_active = false;
                 LOG_INF("📡 Own ADV stopped externally (connection established?)");
@@ -1035,7 +1036,10 @@ static void adv_work_handler(struct k_work *work) {
                 LOG_INF("📡 Piggyback active (ZMK advertising)");
                 zmk_adv_was_active = true;
             }
-        } else if (err == -EAGAIN) {
+        } else if (err == -EAGAIN || err == -EINVAL) {
+            // Zephyr 4.1 returns EINVAL when no legacy ADV object exists,
+            // and EAGAIN when an existing object is disabled. Both require
+            // creating our status ADV rather than retrying update forever.
             // ZMK not advertising → start our own ADV
             zmk_adv_was_active = false;
 
