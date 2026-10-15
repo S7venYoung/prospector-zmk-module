@@ -221,10 +221,13 @@ static char stbuf_transport[48] = "";
 static char stbuf_modifier[64] = "";
 
 /* ========== PWM Backlight Control ========== */
-#if DT_HAS_COMPAT_STATUS_OKAY(pwm_leds)
-#define BACKLIGHT_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(pwm_leds)
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(backlight), okay)
+#define BACKLIGHT_NODE DT_PARENT(DT_NODELABEL(backlight))
+/* Skip the inherited XIAO PWM LED; address the LCD backlight explicitly. */
+#define BACKLIGHT_INDEX DT_NODE_CHILD_IDX(DT_NODELABEL(backlight))
 static const struct device *backlight_dev = DEVICE_DT_GET(BACKLIGHT_NODE);
 #else
+#define BACKLIGHT_INDEX 0
 static const struct device *backlight_dev = NULL;
 #endif
 
@@ -248,7 +251,7 @@ static void set_pwm_brightness(uint8_t brightness) {
     /* INVERT: Backlight circuit is inverted (100% PWM = dark, 0% = bright)
      * So we invert: user's 100% brightness → 0% PWM duty, 1% brightness → 99% PWM */
     uint8_t pwm_value = 100 - brightness;
-    int ret = led_set_brightness(backlight_dev, 0, pwm_value);
+    int ret = led_set_brightness(backlight_dev, BACKLIGHT_INDEX, pwm_value);
     if (ret < 0) {
         LOG_ERR("Failed to set brightness: %d", ret);
     } else {
