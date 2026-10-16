@@ -9,6 +9,7 @@
 LV_FONT_DECLARE(impact_16);
 LV_FONT_DECLARE(impact_20);
 LV_FONT_DECLARE(impact_48);
+LV_FONT_DECLARE(impact_tokens_34);
 LV_FONT_DECLARE(impact_56);
 
 #define INK 0x101411
@@ -127,8 +128,9 @@ void scanner_codex2_theme_create(lv_obj_t *screen) {
     lv_obj_set_pos(tokens_caption, 8, 7);
     lv_obj_t *tokens_marks = text(tokens, "///", &impact_16, YELLOW);
     lv_obj_set_pos(tokens_marks, 101, 7);
-    host_tokens = text(tokens, "--", &impact_48, PAPER);
-    center(host_tokens, 2, 40, 118);
+    host_tokens = text(tokens, "--", &impact_tokens_34, PAPER);
+    center(host_tokens, 4, 54, 114);
+    lv_label_set_long_mode(host_tokens, LV_LABEL_LONG_CLIP);
 
     lv_obj_t *bar = panel(screen, 14, 165, 252, 30, INK, MUTED, 10);
     lv_obj_t *layer_caption = text(bar, "LAYER", &impact_16, MUTED);
@@ -169,21 +171,13 @@ static void set_battery(lv_obj_t *value, lv_obj_t *fill, lv_obj_t *dot, uint8_t 
     lv_obj_set_style_bg_color(fill, lv_color_hex(level < 20 ? RED : GREEN), 0);
     lv_obj_set_style_bg_color(dot, lv_color_hex(level ? GREEN : RED), 0);
 }
-/* Keep large totals on one line; 98.5M is wider than this card at 48px. */
+/* Fixed-size digits: totals never change size when crossing a width threshold. */
 static void update_token_text(const char *value) {
-    const lv_font_t *fonts[] = { &impact_48, &impact_20 };
     lv_label_set_long_mode(host_tokens, LV_LABEL_LONG_CLIP);
+    lv_obj_set_style_text_font(host_tokens, &impact_tokens_34, 0);
+    lv_obj_set_width(host_tokens, 114);
+    lv_obj_set_pos(host_tokens, 4, 54);
     lv_label_set_text(host_tokens, value);
-    for (size_t i = 0; i < ARRAY_SIZE(fonts); ++i) {
-        lv_obj_set_style_text_font(host_tokens, fonts[i], 0);
-        lv_obj_set_width(host_tokens, LV_SIZE_CONTENT);
-        lv_obj_update_layout(host_tokens);
-        if (lv_obj_get_width(host_tokens) <= 114 || i + 1 == ARRAY_SIZE(fonts)) {
-            lv_obj_set_width(host_tokens, 114);
-            lv_obj_set_pos(host_tokens, 4, 40 + (64 - fonts[i]->line_height) / 2);
-            break;
-        }
-    }
 }
 void scanner_codex2_theme_host_update(const struct scanner_host_status *status) {
     if (!status || !host_left || !host_tokens || !host_week || !status->codex_available) return;
@@ -191,6 +185,9 @@ void scanner_codex2_theme_host_update(const struct scanner_host_status *status) 
     if (status->codex_left_available) snprintk(left, sizeof(left), "%u%%", status->codex_left_percent);
     else snprintk(left, sizeof(left), "--%%");
     if (!status->codex_tokens_available) snprintk(tokens, sizeof(tokens), "--");
+    else if (status->codex_total_tokens >= 1000000000U)
+        snprintk(tokens, sizeof(tokens), "%u.%uB", status->codex_total_tokens / 1000000000U,
+                 (status->codex_total_tokens % 1000000000U) / 100000000U);
     else if (status->codex_total_tokens >= 1000000U)
         snprintk(tokens, sizeof(tokens), "%u.%uM", status->codex_total_tokens / 1000000U,
                  (status->codex_total_tokens % 1000000U) / 100000U);
