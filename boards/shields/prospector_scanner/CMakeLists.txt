@@ -42,7 +42,6 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
     # default only; touch navigation switches the active renderer at runtime.
     target_sources_ifdef(CONFIG_ZMK_DISPLAY_STATUS_SCREEN_CUSTOM app PRIVATE
         src/scanner_codex2_theme.c
-        src/scanner_walle_theme.c
         src/scanner_retro_workstation_theme.c
         src/scanner_light_theme.c
         src/fonts_codex/impact_16.c
