@@ -40,7 +40,6 @@
 #include "scanner_idle_theme.h"   /* radar standby screen before a keyboard is found */
 #include "scanner_codex2_theme.h" /* 5-hour + 7-day Codex dashboard */
 #include "scanner_host_status.h"
-#include "scanner_walle_theme.h"
 #include "scanner_retro_workstation_theme.h"
 #include "scanner_light_theme.h"
 #include "scanner_bootloader.h"
@@ -77,7 +76,7 @@ static lv_obj_t *screen_obj = NULL;
 enum scanner_status_theme {
     SCANNER_STATUS_THEME_ORIGINAL = 0,
     SCANNER_STATUS_THEME_CODEX2,
-    SCANNER_STATUS_THEME_WALLE,
+    SCANNER_STATUS_THEME_WALLE, /* Retired ID: preserve NVS numbering. */
     SCANNER_STATUS_THEME_RETRO_WORKSTATION,
     SCANNER_STATUS_THEME_FIELD,
     SCANNER_STATUS_THEME_RADII,
@@ -88,8 +87,7 @@ enum scanner_status_theme {
 static enum scanner_status_theme active_status_theme =
 #if IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_CODEX2)
     SCANNER_STATUS_THEME_CODEX2;
-#elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_WALLE)
-    SCANNER_STATUS_THEME_WALLE;
+
 #elif IS_ENABLED(CONFIG_PROSPECTOR_SCANNER_THEME_RETRO_WORKSTATION)
     SCANNER_STATUS_THEME_RETRO_WORKSTATION;
 #else
@@ -348,7 +346,7 @@ static uint8_t ds_layer_slide_max = 7;
 static void load_display_settings(void) {
     display_settings_init();
     uint8_t saved_theme = display_settings_get_status_theme();
-    if (saved_theme < SCANNER_STATUS_THEME_COUNT) {
+    if (saved_theme < SCANNER_STATUS_THEME_COUNT && saved_theme != SCANNER_STATUS_THEME_WALLE) {
         active_status_theme = (enum scanner_status_theme)saved_theme;
     }
     ds_auto_brightness_enabled = display_settings_get_auto_brightness();
@@ -660,9 +658,6 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
             switch (active_status_theme) {
             case SCANNER_STATUS_THEME_CODEX2:
                 scanner_codex2_theme_update(&kb_data);
-                break;
-            case SCANNER_STATUS_THEME_WALLE:
-                scanner_walle_theme_update(&kb_data);
                 break;
             case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
                 scanner_retro_workstation_theme_update(&kb_data);
@@ -3022,7 +3017,6 @@ static void destroy_prospector_display_widgets(void) {
     prospector_display_active = false;
     switch (active_status_theme) {
     case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_destroy(); break;
-    case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_destroy(); break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_destroy(); break;
     case SCANNER_STATUS_THEME_LIGHT: scanner_light_theme_destroy(); break;
     case SCANNER_STATUS_THEME_ORIGINAL:
@@ -3040,9 +3034,6 @@ static void create_prospector_display_widgets(void) {
     switch (active_status_theme) {
     case SCANNER_STATUS_THEME_CODEX2:
         scanner_codex2_theme_create(screen_obj);
-        break;
-    case SCANNER_STATUS_THEME_WALLE:
-        scanner_walle_theme_create(screen_obj);
         break;
     case SCANNER_STATUS_THEME_RETRO_WORKSTATION:
         scanner_retro_workstation_theme_create(screen_obj);
@@ -3068,7 +3059,6 @@ static void create_prospector_display_widgets(void) {
     if (cached && cached->has_dynamic_data) {
         switch (active_status_theme) {
         case SCANNER_STATUS_THEME_CODEX2: scanner_codex2_theme_update(cached); break;
-        case SCANNER_STATUS_THEME_WALLE: scanner_walle_theme_update(cached); break;
         case SCANNER_STATUS_THEME_RETRO_WORKSTATION: scanner_retro_workstation_theme_update(cached); break;
         case SCANNER_STATUS_THEME_LIGHT: scanner_light_theme_update(cached); break;
         case SCANNER_STATUS_THEME_ORIGINAL:
@@ -3086,6 +3076,7 @@ static void switch_prospector_status_theme(int8_t direction) {
     int next = (int)active_status_theme + direction;
     if (next < 0) next = SCANNER_STATUS_THEME_COUNT - 1;
     if (next >= SCANNER_STATUS_THEME_COUNT) next = 0;
+    if (next == SCANNER_STATUS_THEME_WALLE) next += direction < 0 ? -1 : 1;
     destroy_prospector_display_widgets();
     lv_obj_clean(screen_obj);
     active_status_theme = (enum scanner_status_theme)next;
