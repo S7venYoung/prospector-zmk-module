@@ -68,6 +68,8 @@ enum screen_state {
 };
 
 static enum screen_state current_screen = SCREEN_MAIN;
+/* One automatic transition per boot; later manual navigation stays manual. */
+static bool first_keyboard_seen = false;
 static lv_obj_t *screen_obj = NULL;
 
 /* The scanner firmware links every renderer. This value changes only on the
@@ -345,6 +347,10 @@ static uint8_t ds_layer_slide_max = 7;
 /* Load persisted settings from NVS into display state variables */
 static void load_display_settings(void) {
     display_settings_init();
+    uint8_t saved_theme = display_settings_get_status_theme();
+    if (saved_theme < SCANNER_STATUS_THEME_COUNT) {
+        active_status_theme = (enum scanner_status_theme)saved_theme;
+    }
     ds_auto_brightness_enabled = display_settings_get_auto_brightness();
     ds_manual_brightness = display_settings_get_manual_brightness();
     ds_max_layers = display_settings_get_max_layers();
@@ -604,6 +610,19 @@ static void pending_update_timer_cb(lv_timer_t *timer) {
              * Otherwise timeout events and the ALS timer alternate PWM levels
              * indefinitely while no keyboard is advertising. */
             return;
+        }
+
+        if (!first_keyboard_seen) {
+            first_keyboard_seen = true;
+            if (current_screen == SCREEN_MAIN) {
+                transition_in_progress = true;
+                destroy_main_screen_widgets();
+                lv_obj_clean(screen_obj);
+                create_prospector_display_widgets();
+                current_screen = SCREEN_PROSPECTOR_DISPLAY;
+                lv_obj_invalidate(screen_obj);
+                transition_in_progress = false;
+            }
         }
 
         /* Detect keyboard change - reset battery count to force full reposition */
@@ -3057,6 +3076,7 @@ static void create_prospector_display_widgets(void) {
         }
     }
 
+    display_settings_set_status_theme((uint8_t)active_status_theme);
     prospector_display_active = true;
 
     LOG_INF("Prospector status theme created: %d", active_status_theme);
