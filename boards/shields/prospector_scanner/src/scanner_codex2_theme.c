@@ -86,7 +86,7 @@ void scanner_codex2_theme_create(lv_obj_t *screen) {
 
     lv_obj_t *brand = text(screen, "CODEX", &impact_20, YELLOW);
     lv_obj_set_pos(brand, 18, 8);
-    lv_obj_t *suffix = text(screen, "// SOFLE", &impact_20, PAPER);
+    lv_obj_t *suffix = text(screen, "// Velvet", &impact_20, PAPER);
     lv_obj_set_pos(suffix, 83, 8);
     lv_obj_t *usb = text(screen, "USB", &impact_16, PAPER);
     lv_obj_set_pos(usb, 226, 8);
