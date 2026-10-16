@@ -62,6 +62,8 @@ static uint8_t scanner_channel =
     0;
 #endif
 
+static uint8_t status_theme = UINT8_MAX; /* No saved selection yet. */
+
 static uint8_t layout_style = 2; /* PROSPECTOR_LAYOUT_OPERATOR = 2 */
 
 static bool battery_visible = IS_ENABLED(CONFIG_PROSPECTOR_BATTERY_SUPPORT);
@@ -113,6 +115,12 @@ static int display_settings_handle_set(const char *name, size_t len,
             return 0;
         }
         return rc;
+    }
+
+    if (settings_name_steq(name, "theme", &next) && !next) {
+        if (len != sizeof(status_theme)) return -EINVAL;
+        rc = read_cb(cb_arg, &status_theme, sizeof(status_theme));
+        return rc < 0 ? rc : 0;
     }
 
     if (settings_name_steq(name, "layout", &next) && !next) {
@@ -294,4 +302,18 @@ void display_settings_set_battery_visible(bool visible) {
     }
     battery_visible = visible;
     mark_dirty();
+}
+
+/* Persist only the theme: switching must not commit unsaved brightness edits. */
+uint8_t display_settings_get_status_theme(void) { return status_theme; }
+
+void display_settings_set_status_theme(uint8_t theme) {
+    if (status_theme == theme) return;
+    status_theme = theme;
+#if IS_ENABLED(CONFIG_SETTINGS)
+    if (settings_loaded) {
+        int rc = settings_save_one("prosp/theme", &status_theme, sizeof(status_theme));
+        if (rc < 0) LOG_ERR("Failed to save scanner theme: %d", rc);
+    }
+#endif
 }
