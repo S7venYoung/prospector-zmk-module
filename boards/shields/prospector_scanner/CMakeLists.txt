@@ -45,6 +45,7 @@ if(CONFIG_SHIELD_PROSPECTOR_SCANNER)
         src/scanner_retro_workstation_theme.c
         src/scanner_light_theme.c
         src/fonts_codex/impact_16.c
+        src/fonts_codex/impact_tokens_34.c
         src/fonts_codex/impact_20.c
         src/fonts_codex/impact_48.c
         src/fonts_codex/impact_56.c)
