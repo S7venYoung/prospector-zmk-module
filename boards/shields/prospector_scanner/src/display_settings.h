@@ -65,4 +65,8 @@ void display_settings_set_layout(uint8_t layout);
 bool display_settings_get_battery_visible(void);
 void display_settings_set_battery_visible(bool visible);
 
+/* Last selected status theme; UINT8_MAX means no selection saved. */
+uint8_t display_settings_get_status_theme(void);
+void display_settings_set_status_theme(uint8_t theme);
+
 #endif /* DISPLAY_SETTINGS_H */
